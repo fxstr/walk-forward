@@ -1,0 +1,39 @@
+{
+  "name": "walk-forward",
+  "version": "0.1.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "npx ava --watch --verbose"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "ava": "^2.2.0",
+    "csv-parse": "^4.4.5",
+    "debug": "^4.1.1",
+    "express": "^4.17.1",
+    "glob": "^7.1.4"
+  },
+  "ava": {
+    "files": [
+      "**/*.unit.js",
+      "**/*.unit.mjs",
+      "**/*.integration.js",
+      "**/*.integration.mjs"
+    ],
+    "require": [
+      "esm"
+    ],
+    "extensions": [
+      "mjs",
+      "js"
+    ],
+    "babel": false,
+    "compileEnhancements": false
+  },
+  "devDependencies": {
+    "@joinbox/eslint-config-joinbox": "^1.0.8",
+    "babel-eslint": "^10.0.3"
+  }
+}
