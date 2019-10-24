@@ -9,46 +9,39 @@ function setupData() {
     return { transformFunction };
 }
 
-test('finds correct files', (t) => {
-    const { transformFunction } = setupData();
-    const data = readFromCSV('backtest/readFromCSV/test-data/*.csv', transformFunction);
-    t.is(data.instruments.size, 1);
-    t.is(data.instruments.has('valid'), true);
+test('reads correct files', (t) => {
+    const data = readFromCSV('backtest/readFromCSV/testData/*.csv');
+    t.is(data.size, 1);
+    t.is(data.has('valid'), true);
 });
 
-test('accepts and applies transformer', (t) => {
+test('returns correct data (without transformFunction)', (t) => {
+    const data = readFromCSV('backtest/readFromCSV/testData/*.csv');
+    t.deepEqual(data, new Map([[
+        'valid', [new Map([
+            ['date', '2019-01-01 00:00:00'],
+            ['open', '4.12'],
+            ['close', '4.35'],
+        ]), new Map([
+            ['date', '2019-01-02 00:00:00'],
+            ['open', '4.21'],
+            ['close', '4.18'],
+        ])],
+    ]]));
+});
+
+test('applies transformFunction', (t) => {
     const { transformFunction } = setupData();
-    const data = readFromCSV('backtest/readFromCSV/test-data/*.csv', transformFunction);
-    t.deepEqual(
-        data,
-        {
-            instruments: new Map([
-                [
-                    'valid',
-                    {
-                        columns: new Map(),
-                        data: new Map([
-                            [
-                                1546297200000,
-                                {
-                                    selected: false,
-                                    weight: 1,
-                                    order: undefined,
-                                    data: new Map([['open', 4.12], ['close', 4.35]]),
-                                },
-                            ], [
-                                1546383600000,
-                                {
-                                    selected: false,
-                                    weight: 1,
-                                    order: undefined,
-                                    data: new Map([['open', 4.21], ['close', 4.18]]),
-                                },
-                            ],
-                        ]),
-                    },
-                ],
-            ]),
-        },
-    );
+    const data = readFromCSV('backtest/readFromCSV/testData/*.csv', transformFunction);
+    t.deepEqual(data, new Map([[
+        'valid', [new Map([
+            ['date', 1546297200000],
+            ['open', 4.12],
+            ['close', 4.35],
+        ]), new Map([
+            ['date', 1546383600000],
+            ['open', 4.21],
+            ['close', 4.18],
+        ])],
+    ]]));
 });

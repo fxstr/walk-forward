@@ -4,6 +4,4 @@
  * @param  {Function} fn    Function to be run
  * @return {Promise}        Promise that resolves to the executed function
  */
-export default async (data, fn) => {
-    return await fn(data);
-}
+export default async(data, fn) => fn(data);

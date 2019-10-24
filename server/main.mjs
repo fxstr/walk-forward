@@ -1,12 +1,10 @@
 import { exec } from 'child_process';
-import { exit } from 'process';
-import { argv } from 'process';
-import Server from './server.mjs';
-import setupWatcher from './setupWatcher.mjs';
+import { exit, argv } from 'process';
+import setupServer from './server.mjs';
 
 /**
  * Starts watcher and server. Call it with
- * 
+ *
  *      node --experimental-modules main.js file=./myFileToWatch.mjs
  *
  */
@@ -24,10 +22,9 @@ if (!fileArgument.startsWith('file=')) {
 
 try {
     const filePath = fileArgument.substr(5);
-    Server.listen(8000)
+    setupServer(filePath);
     exec('open -a "Google Chrome" http://localhost:8000');
-    setupWatcher(filePath)
     console.log('main.js: Ready, file is %s', filePath);
-} catch(err) {
+} catch (err) {
     console.error('main.mjs: %o', err);
 }

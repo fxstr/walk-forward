@@ -4,35 +4,16 @@ import glob from 'glob';
 // Test file throws error if we're using 'csv-parse/lib/sync.js': module cannot be found.
 import parseCSV from '../../node_modules/csv-parse/lib/sync.js';
 import logger from '../logger/logger.mjs';
-import transformRow from './transformRow.mjs';
+import transformObject from '../dataHelpers/transformObject.mjs';
 
 const { debug } = logger('WalkForward:readFromCSV');
 
 /**
- * Reads instrument data from CSV, returns updated data in the from of:
- * new Map([[
- *     fileName,
- *     {
- *         // Data for every col, e.g. indicator used, col data derives from, view options …
- *         columns: new Map(),
- *         data: new Map([
- *             timeStamp,
- *             {
- *                 selected: false,
- *                 weight: 1,
- *                 order: 3,
- *                 data: new Map([
- *                     ['open', 5.12],
- *                     ['close', 5.18],
- *                 ]),
- *             },
- *         ]),
- *     },
- * ]])
+ * Reads instrument data from (multiple) CSVs, returns re-formatted data.
  *
  * @param {String} globPattern              Glob pattern of CSV files that should be read and
  *                                          parsed.
- * @param {Function} [transformerFunction]  Function that transforms every row's entries. Is called
+ * @param {Function} [transformFunction]   Function that transforms every row's entries. Is called
  *                                          with an array [key, value] and must return a
  *                                          corresponding array [transformedKey, transformedValue].
  *                                          Example (converts date row to a timeStamp and every
@@ -43,22 +24,32 @@ const { debug } = logger('WalkForward:readFromCSV');
  *                                              }
  *                                              else return [key, Number(value)]
  *                                          }
+ *
+ * @return {Object}                         CSV data in the form of
+ *                                          {
+ *                                              instrument1Name: {
+ *                                                  date: 132495124,
+ *                                                  open: 12.5,
+ *                                              }
+ *                                          }
+
  */
-export default (globPattern, transformerFunction) => {
+export default (globPattern, transformFunction = value => value) => {
 
     const files = glob.sync(globPattern);
     debug('Read files %o', files);
+    if (files.length === 0) {
+        console.warn('readFromCSV: There are no files to be read');
+    }
 
     // Options for parse-csv
     const parseOptions = {
         columns: true,
     };
 
-    // Map with an entry for every instrument; key is the instrument's file name (without
-    // extension).
-    const data = new Map();
+    // Flatten data into a single array of data sets; add column instrument
+    return files.reduce((prev, file) => {
 
-    for (const file of files) {
         const content = readFileSync(file);
         const parsedData = parseCSV(content, parseOptions);
         const fileName = parsePath(file).name;
@@ -69,19 +60,15 @@ export default (globPattern, transformerFunction) => {
             parsedData.length ? Object.keys(parsedData[0]) : undefined,
         );
 
-        // parseCSV creates an object from every row; transform data to match our internal data
-        // structure (see function docs above).
-        const dataAsMap = new Map(parsedData.map(row => transformRow(row, transformerFunction)));
-        data.set(fileName, {
-            columns: new Map(),
-            data: dataAsMap,
-        });
-    }
+        // Apply transformFunction to every row (object) of CSV
+        const transformedData = parsedData
+            .map(entry => transformObject(entry, transformFunction))
+            .map(entry => new Map(Object.entries(entry)));
 
-    return {
-        // Export instrument data as instrument property, as we need a "safe space" for other data
-        // (e.g. accounts, positions …)
-        instruments: data,
-    };
+        const result = new Map(prev);
+        result.set(fileName, transformedData);
+        return result;
+
+    }, new Map());
 
 };

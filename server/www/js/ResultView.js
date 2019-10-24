@@ -1,3 +1,8 @@
+/* global HTMLElement, document, window */
+
+/**
+ * Listens to changes on data, renders <high-stock-view> every time data changes
+ */
 class ResultView extends HTMLElement {
 
     listening = false;
@@ -29,9 +34,16 @@ class ResultView extends HTMLElement {
             return;
         }
         this.internalData.addEventListener('change', (data) => {
-            const element = document.createElement('div');
-            element.innerHTML = data.replace(/\n/g, '<br/>').replace(/\s/g, '&nbsp;') + '<hr/>';
-            this.appendChild(element);
+            let parsedData;
+            try {
+                parsedData = JSON.parse(data);
+            } catch (err) {
+                console.error('ResultView: Could not parse data %o: %o', data, err);
+                return;
+            }
+            console.log('ResultView: Data changed, create HighStockView');
+            this.innerHTML = '<high-stock-view />';
+            this.firstChild.data = parsedData;
         });
         this.listening = true;
     }

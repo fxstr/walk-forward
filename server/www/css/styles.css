@@ -1,4 +1,14 @@
 result-view {
     display: block;
     border: 1px solid salmon;
+    height: 90vh;
+}
+
+high-stock-view {
+    display: block;
+    height: 100%;
+}
+
+.high-stock-container {
+    height: 100%;
 }

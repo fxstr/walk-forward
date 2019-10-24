@@ -1,7 +1,10 @@
 import sort from '../sort/sort.mjs';
 import run from '../run/run.mjs';
-import runDirectly from '../runDirectly/runDirectly.mjs';
+// import runDirectly from '../runDirectly/runDirectly.mjs';
+import useData from '../useData/useData.mjs';
+import addIndicator from '../addIndicator/addIndicator.mjs';
 import writeFile from '../writeFile/writeFile.mjs';
+import addViewOptions from '../addViewOptions/addViewOptions.mjs';
 import logger from '../logger/logger.mjs';
 
 /**
@@ -13,9 +16,9 @@ import logger from '../logger/logger.mjs';
  * @return {Object}         Object with keys for all methods that can be called on the stack.
  */
 const createStrategy = (stack = []) => ({
-    useData: (...params) => createStrategy([...stack, [runDirectly, ...params],
-    ]),
-    // addIndicator: (name, fn) => createStrategy([...stack, ['indicator', name, fn]]),
+    useData: (...params) => createStrategy([...stack, [useData, ...params]]),
+    addIndicator: (...params) => createStrategy([...stack, [addIndicator, ...params]]),
+    addViewOptions: (...params) => createStrategy([...stack, [addViewOptions, ...params]]),
     sort: (...params) => createStrategy([...stack, [sort, ...params]]),
     writeFile: (...params) => createStrategy([...stack, [writeFile, ...params]]),
     run: run(stack),

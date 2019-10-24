@@ -6,4 +6,5 @@ const socket = new SocketListener(data);
 
 socket.listen();
 
+/* global document */
 document.querySelector('result-view').data = data;
