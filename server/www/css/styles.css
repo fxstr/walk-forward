@@ -1,7 +1,10 @@
+html, body {
+    margin: 0;
+}
+
 result-view {
     display: block;
-    border: 1px solid salmon;
-    height: 90vh;
+    height: 100vh;
 }
 
 high-stock-view {

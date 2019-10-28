@@ -25,13 +25,52 @@ import convertInstrumentToHighstock from '../writeFile/convertInstrumentToHighst
             ]),
         })
 
-        // Will be added to main p
+        // Will be added to main panel
         .addIndicator(talibIndicator({
             name: 'SMA',
             inputs: { inReal: 'close' },
             outputs: { outReal: 'sma4' },
             options: { optInTimePeriod: 4 },
         }))
+
+        // Get average (high + low + close) / 3
+        .addIndicator(talibIndicator({
+            name: 'AVGPRICE',
+            inputs: {
+                close: 'close',
+                high: 'high',
+                low: 'low',
+                open: 'open',
+            },
+            outputs: { outReal: 'averagePrice' },
+            options: {},
+        }))
+        .addViewOptions({
+            series: new Map([['averagePrice', { panel: false }]]),
+        })
+
+        // Add linear regression of average
+        .addIndicator(talibIndicator({
+            name: 'LINEARREG',
+            inputs: { inReal: 'averagePrice' },
+            outputs: { outReal: 'linearRegressionSlow' },
+            options: { optInTimePeriod: 25 },
+        }))
+        /* .addIndicator(talibIndicator({
+            name: 'LINEARREG',
+            inputs: { inReal: 'averagePrice' },
+            outputs: { outReal: 'linearRegressionFast' },
+            options: { optInTimePeriod: 40 },
+        })) */
+        .addViewOptions({
+            panels: new Map([
+                ['linearReg', { height: 0.2 }],
+            ]),
+            series: new Map([
+                ['linearRegressionSlow', { panel: 'linearReg' }],
+                // ['linearRegressionFast', { panel: 'linearReg' }],
+            ]),
+        })
 
         // Will be added to new panel
         .addIndicator(talibIndicator({
