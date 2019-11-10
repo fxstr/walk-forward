@@ -12,7 +12,7 @@ const createInstruction = (instrument, day, selected = 1, weight = 1) => ({
 });
 
 test('throws on invalid config', (t) => {
-    t.throws(() => trade(0)(), /capital that is a number/);
+    t.throws(() => trade(undefined, false), /capital that is a number/);
 });
 
 test('converts data as expected', (t) => {
@@ -36,7 +36,7 @@ test('converts data as expected', (t) => {
     data.configuration.investedRatio = 0.9;
     data.configuration.maxRatioPerInstrument = 0.8;
 
-    const result = trade({ capital: 1000 })(data);
+    const { result } = trade(data, 1000);
 
     // Jan 1
     t.deepEqual(result[0], {
@@ -188,6 +188,6 @@ test('does not modify original data', (t) => {
     const { data } = createTestData();
     data.instructions[0] = createInstruction('aapl', 1, -1, 2);
     const clone = walkStructure(data);
-    trade({ capital: 1000 })(data);
+    trade(data, 1000);
     t.deepEqual(clone, data);
 });

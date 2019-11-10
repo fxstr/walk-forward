@@ -1,10 +1,11 @@
-// import sort from '../sort/sort.mjs';
 import run from '../run/run.mjs';
 import useData from '../useData/useData.mjs';
 import addIndicator from '../addIndicator/addIndicator.mjs';
 import writeFile from '../writeFile/writeFile.mjs';
 import addViewOptions from '../addViewOptions/addViewOptions.mjs';
 import configure from '../configure/configure.mjs';
+import trade from '../trade/trade.mjs';
+import select from '../select/select.mjs';
 
 /**
  * Returns an object which contains all methods that can be called on a strategy (sort,
@@ -18,11 +19,12 @@ const createStrategy = (stack = []) => ({
     useData: (...params) => createStrategy([...stack, [useData, ...params]]),
     addIndicator: (...params) => createStrategy([...stack, [addIndicator, ...params]]),
     addViewOptions: (...params) => createStrategy([...stack, [addViewOptions, ...params]]),
-    // sort: (...params) => createStrategy([...stack, [sort, ...params]]),
     writeFile: (...params) => createStrategy([...stack, [writeFile, ...params]]),
-    run: run(stack),
+    run: capital => run(stack, capital),
     configure: (...params) => createStrategy([...stack, [configure, ...params]]),
-    get: () => stack,
+    getData: callback => createStrategy([...stack, [callback]]),
+    trade: (...params) => createStrategy([...stack, [trade, ...params]]),
+    select: (...params) => createStrategy([...stack, [select, ...params]]),
 });
 
 export default createStrategy;

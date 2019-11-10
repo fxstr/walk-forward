@@ -20,6 +20,7 @@ test('uses ohlc/main for ohlc data', (t) => {
                 [1546815600000, 13.4, 14.4, 12.1, 13.1],
             ],
             yAxis: 'main',
+            name: 'aapl',
         }],
         yAxis: [{
             top: '0%',

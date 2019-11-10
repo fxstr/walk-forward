@@ -14,7 +14,7 @@ import groupBy from '../dataHelpers/groupBy.mjs';
  *                                     sorted in inversed chronological order (newest first)
  * @return {Object}                  Data as created by useData
  */
-export default selectFunction => (data) => {
+export default (data, selectFunction) => {
 
     const { instrumentKey } = data;
 

@@ -1,21 +1,17 @@
 import logger from '../logger/logger.mjs';
+import runStack from './runStack.mjs';
 
 const { debug } = logger('WalkForward:run');
 
-export default stack => async() => {
+export default async(stack) => {
+
+    debug('Run stack with %d entries', stack.length);
 
     // At the beginning, data is an empty Map; it can be overwritten by using data sources. Make
     // sure readFromCSV (or any other source) also returns a map.
-    let data = new Map();
+    const result = await runStack(stack, new Map());
 
-    // Just go through all methods and execute them serially
-    for await (const methodData of stack) {
-        const [stackFunction, ...parameters] = methodData;
-        debug('Call function %o', stackFunction);
-        data = await stackFunction(data, ...parameters);
-    }
-
-    debug('All functions were run');
-    return data;
+    debug('All functions were run.');
+    return result;
 
 };

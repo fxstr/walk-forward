@@ -22,7 +22,7 @@ export default function useData(emptyData, fetchFunction) {
         timeSeries: [],
         instructions: [],
         viewOptions: {},
-        results: {},
+        result: {},
         configuration: createDefaultConfiguration(),
     };
 

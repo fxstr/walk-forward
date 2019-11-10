@@ -5,12 +5,13 @@ const { debug } = logger('WalkForward:createOHLCOutput');
 /**
  * Creates output for OHLC.
  * @param  {Map[]} data         Instrument data to be exported
+ * @param {string}  name        Name of the instrument the data is exported for
  * @return {Object|undefined}   If OHLC data exsits: Object with keys
  *                              - series : Highstock config for series
  *                              - spareFields: All fields other than the ones used for OHLC
  *                              If OHLC data does not exist, returns undefined
  */
-export default function createOHLCOutput(instrumentData) {
+export default function createOHLCOutput(instrumentData, name) {
 
     // We assume/know that every single time series entry has the same fields; therefore we only
     // look for keys on the first entry
@@ -35,6 +36,7 @@ export default function createOHLCOutput(instrumentData) {
             type: 'ohlc',
             data: ohlc,
             yAxis: 'main',
+            name,
         },
         spareFields: allTimeSeriesFields,
     };

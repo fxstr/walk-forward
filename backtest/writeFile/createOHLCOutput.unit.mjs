@@ -33,7 +33,7 @@ test('returns series and data if ohlc is given', (t) => {
         ]),
     ];
 
-    const result = createOHLCOutput(data);
+    const result = createOHLCOutput(data, 'test');
     t.deepEqual(result, {
         series: {
             data: [
@@ -42,6 +42,7 @@ test('returns series and data if ohlc is given', (t) => {
             ],
             yAxis: 'main',
             type: 'ohlc',
+            name: 'test',
         },
         spareFields: new Set(['date', 'other', 'last']),
     });

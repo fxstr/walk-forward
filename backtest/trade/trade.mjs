@@ -1,6 +1,9 @@
 import sortBy from '../dataHelpers/sortBy.mjs';
 import groupBy from '../dataHelpers/groupBy.mjs';
 import tradeForDate from './tradeForDate.mjs';
+import logger from '../logger/logger.mjs';
+
+const { debug } = logger('WalkForward:trade');
 
 /**
  * Executes a trading strategy for every date.
@@ -11,10 +14,10 @@ import tradeForDate from './tradeForDate.mjs';
  *                            properties date and cash
  *                          - orders: Array of Maps, …
  */
-export default configuration => (data) => {
+export default (data, capital) => {
 
-    if (typeof configuration.capital !== 'number') {
-        throw new Error(`trade: Pass config with property capital that is a number; you passed ${configuration.capital} instead.`);
+    if (typeof capital !== 'number') {
+        throw new Error(`trade: Pass parameter capital that is a number; you passed ${capital} instead.`);
     }
 
     const { instrumentKey } = data;
@@ -29,7 +32,11 @@ export default configuration => (data) => {
 
 
     // Create positions/orders for every entry in timeSeries
-    return timeSeriesGroupedByDate.reduce((previous, [date, timeSeriesEntries], index) => {
+    const tradeResult = timeSeriesGroupedByDate.reduce((
+        previous,
+        [date, timeSeriesEntries],
+        index,
+    ) => {
 
         // Get instructions; as every entry in timeSeries has an entry in instructions, we can
         // directly access instructions with the index of timeSeries.
@@ -71,7 +78,7 @@ export default configuration => (data) => {
         return [...previous, result];
 
     }, [{
-        cash: configuration.capital,
+        cash: capital,
         positionValues: new Map(),
         // Orders are executed on open, where they are taken as 'left overs' from the previous
         // close; therefore, let's start with an empty order from the bar *before* we started
@@ -80,5 +87,17 @@ export default configuration => (data) => {
         // Array of orders, see createOrder.mjs
         positions: [],
     }]);
+
+    debug(
+        'Trades executed, final amount is %d',
+        tradeResult.cash + Array
+            .from(tradeResult.slice(-1).pop().positionValues.values())
+            .reduce((prev, value) => prev + value, 0),
+    );
+
+    return {
+        ...data,
+        result: tradeResult,
+    };
 
 };

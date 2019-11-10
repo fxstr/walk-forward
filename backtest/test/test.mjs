@@ -2,6 +2,7 @@ import createStrategy from '../createStrategy/createStrategy.mjs';
 import readFromCSV from '../readFromCSV/readFromCSV.mjs';
 import talibIndicator from '../talibIndicator/talibIndicator.mjs';
 import convertInstrumentToHighstock from '../writeFile/convertInstrumentToHighstock.mjs';
+import exportResult from '../writeFile/exportResult.mjs';
 
 (async() => {
 
@@ -98,14 +99,29 @@ import convertInstrumentToHighstock from '../writeFile/convertInstrumentToHighst
 
         .configure({
             investedRatio: 0.9,
-            maxRatioPerInstrument: 0.1,
+            maxRatioPerInstrument: 0.25,
         })
+
+        .select((bar, instrumentName, allData) => {
+            const instrumentData = allData.get(instrumentName);
+            // First bar: There is no previous bar to look back to
+            if (instrumentData.length === 1) return 0;
+            const previousRegression = allData.get(instrumentName)[1].get('linearRegressionSlow');
+            // Regression is only available after x bars have passed (x = regression period)
+            if (previousRegression === undefined) return 0;
+            // Open position if regression slope is growing
+            return bar.get('linearRegressionSlow') > previousRegression ? 1 : 0;
+        })
+
+        .trade(10 ** 5)
 
         // Only write one instrument (to be displayed in browser)
         .writeFile(
             'test/output/result.json',
-            convertInstrumentToHighstock('aapl'),
+            // convertInstrumentToHighstock('aapl'),
+            exportResult(),
         )
+
         // Actually runs the stack – must be at the end
         .run();
 
