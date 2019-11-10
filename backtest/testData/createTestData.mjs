@@ -1,3 +1,5 @@
+import createDefaultConfiguration from '../useData/createDefaultConfiguration.mjs';
+
 /**
  * Returns data as created by useData
  */
@@ -29,12 +31,12 @@ export default function createTestData() {
         instructions: scaffold.map(entry => ({
             date: new Date(2019, 0, entry[1], 0, 0, 0).getTime(),
             instrument: entry[0],
-            selected: false,
-            order: undefined,
+            selected: 0,
             weight: 1,
             trade: 1,
         })),
         viewOptions: {},
+        configuration: createDefaultConfiguration(),
     };
 
     return { instrumentKey, data };

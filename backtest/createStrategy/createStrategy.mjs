@@ -1,11 +1,10 @@
-import sort from '../sort/sort.mjs';
+// import sort from '../sort/sort.mjs';
 import run from '../run/run.mjs';
-// import runDirectly from '../runDirectly/runDirectly.mjs';
 import useData from '../useData/useData.mjs';
 import addIndicator from '../addIndicator/addIndicator.mjs';
 import writeFile from '../writeFile/writeFile.mjs';
 import addViewOptions from '../addViewOptions/addViewOptions.mjs';
-import logger from '../logger/logger.mjs';
+import configure from '../configure/configure.mjs';
 
 /**
  * Returns an object which contains all methods that can be called on a strategy (sort,
@@ -19,9 +18,10 @@ const createStrategy = (stack = []) => ({
     useData: (...params) => createStrategy([...stack, [useData, ...params]]),
     addIndicator: (...params) => createStrategy([...stack, [addIndicator, ...params]]),
     addViewOptions: (...params) => createStrategy([...stack, [addViewOptions, ...params]]),
-    sort: (...params) => createStrategy([...stack, [sort, ...params]]),
+    // sort: (...params) => createStrategy([...stack, [sort, ...params]]),
     writeFile: (...params) => createStrategy([...stack, [writeFile, ...params]]),
     run: run(stack),
+    configure: (...params) => createStrategy([...stack, [configure, ...params]]),
     get: () => stack,
 });
 

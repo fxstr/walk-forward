@@ -36,6 +36,8 @@ test('returns correctly formatted data', (t) => {
         'timeSeries',
         'instructions',
         'viewOptions',
+        'results',
+        'configuration',
     ]);
 
     // instruments
@@ -70,6 +72,12 @@ test('returns correctly formatted data', (t) => {
 
     // viewOptions
     t.deepEqual(data.viewOptions, {});
+
+    // Config: Is an object
+    t.is(data.configuration.constructor, Object);
+
+    // Results
+    t.deepEqual(data.results, {});
 
 });
 

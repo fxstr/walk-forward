@@ -1,5 +1,6 @@
 import createDefaultInstructions from './createDefaultInstructions.mjs';
 import logger from '../logger/logger.mjs';
+import createDefaultConfiguration from './createDefaultConfiguration.mjs';
 
 const { debug } = logger('WalkForward:useData');
 
@@ -21,7 +22,8 @@ export default function useData(emptyData, fetchFunction) {
         timeSeries: [],
         instructions: [],
         viewOptions: {},
-        // results: {} TODO
+        results: {},
+        configuration: createDefaultConfiguration(),
     };
 
     // Go through every instrument

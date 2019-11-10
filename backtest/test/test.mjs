@@ -62,7 +62,7 @@ import convertInstrumentToHighstock from '../writeFile/convertInstrumentToHighst
             outputs: { outReal: 'linearRegressionFast' },
             options: { optInTimePeriod: 40 },
         })) */
-        .addViewOptions({
+        /* .addViewOptions({
             panels: new Map([
                 ['linearReg', { height: 0.2 }],
             ]),
@@ -70,7 +70,7 @@ import convertInstrumentToHighstock from '../writeFile/convertInstrumentToHighst
                 ['linearRegressionSlow', { panel: 'linearReg' }],
                 // ['linearRegressionFast', { panel: 'linearReg' }],
             ]),
-        })
+        }) */
 
         // Will be added to new panel
         .addIndicator(talibIndicator({
@@ -78,9 +78,9 @@ import convertInstrumentToHighstock from '../writeFile/convertInstrumentToHighst
             inputs: { high: 'high', low: 'low', close: 'close' },
             outputs: { outSlowK: 'slowK', outSlowD: 'slowD' },
             options: {
-                optInFastK_Period: 5,
-                optInSlowK_Period: 3,
-                optInSlowD_Period: 3,
+                optInFastK_Period: 15,
+                optInSlowK_Period: 12,
+                optInSlowD_Period: 12,
                 optInSlowK_MAType: 0,
                 optInSlowD_MAType: 0,
             },
@@ -94,6 +94,11 @@ import convertInstrumentToHighstock from '../writeFile/convertInstrumentToHighst
                 ['slowK', { panel: 'stoch' }],
                 ['slowD', { panel: 'stoch' }],
             ]),
+        })
+
+        .configure({
+            investedRatio: 0.9,
+            maxRatioPerInstrument: 0.1,
         })
 
         // Only write one instrument (to be displayed in browser)

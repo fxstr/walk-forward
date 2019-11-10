@@ -6,10 +6,8 @@ test('creates correct instructions', (t) => {
     t.deepEqual(result, {
         date: 1234,
         instrument: 'testInstrument',
-        selected: false,
-        order: undefined,
+        selected: 0,
         weight: 1,
-        trade: 1,
-
+        trade: true,
     });
 });
