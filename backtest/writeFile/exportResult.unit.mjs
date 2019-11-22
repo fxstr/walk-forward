@@ -10,6 +10,7 @@ const createSeries = (name, data, yAxis = 'capital') => ({
     data: [[120, data[0]], [121, data[1]]],
 });
 
+
 test('exports data', (t) => {
 
     const data = {

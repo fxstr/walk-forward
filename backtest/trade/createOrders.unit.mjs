@@ -66,14 +66,14 @@ test('works with multiple instructions', (t) => {
     );
 });
 
-test('ignores non-selected', (t) => {
+test('creates canceling order if selected is 0', (t) => {
     t.deepEqual(
         createOrders(
-            [createInstruction(true, 0)],
-            new Map([['test', 2]]),
+            [createInstruction(true, 0, 'cancelTest')],
+            new Map([['cancelTest', 2]]),
             100,
         ),
-        new Map(),
+        new Map([['cancelTest', 0]]),
     );
 });
 
@@ -99,7 +99,7 @@ test('works with negative orders', (t) => {
     );
 });
 
-test('works with 0 (does not divide by 0)', (t) => {
+test('works with weight 0 (does not divide by 0)', (t) => {
     t.deepEqual(
         createOrders(
             [createInstruction(true, -1, 'test', 0)],

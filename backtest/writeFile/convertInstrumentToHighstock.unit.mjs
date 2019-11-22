@@ -120,3 +120,18 @@ test('does not output if panel is false', (t) => {
     });
 });
 
+
+test('creates result panel if available', (t) => {
+    const { data } = createTestData();
+    data.result = [{
+        positions: [],
+        orders: new Map(),
+    }];
+    const result = convertInstrumentToHighstock('aapl')(data);
+    // Only test basically; detailed tests are in createResultChart.
+    const resultPanel = result.yAxis.find(axis => axis.id === 'resultPanel');
+    t.is(resultPanel.constructor, Object);
+    const resultSeries = result.series.find(series => series.yAxis === 'resultPanel');
+    t.is(resultSeries.constructor, Object);
+});
+

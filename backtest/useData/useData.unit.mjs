@@ -2,14 +2,14 @@ import test from 'ava';
 import useData from './useData.mjs';
 
 test('fails if date is missing', (t) => {
-    const noDate = () => new Map([['instrument', [new Map([['field', 'content']])]]]);
+    const noDate = new Map([['instrument', [new Map([['field', 'content']])]]]);
     t.throws(() => useData(new Map(), noDate), /Every row must contain a property 'date'/);
-    const invalidDate = () => new Map([['instrument', [new Map([['date', 'NaN']])]]]);
+    const invalidDate = new Map([['instrument', [new Map([['date', 'NaN']])]]]);
     t.throws(() => useData(new Map(), invalidDate), /Every row must contain a property 'date'/);
 });
 
 test('fails if date is duplicate', (t) => {
-    const fetch = () => new Map([['instrument', [
+    const fetch = new Map([['instrument', [
         new Map([['date', 2]]),
         new Map([['date', 2]]),
     ]]]);
@@ -17,7 +17,7 @@ test('fails if date is duplicate', (t) => {
 });
 
 test('returns correctly formatted data', (t) => {
-    const fetch = () => new Map([
+    const fetch = new Map([
         ['aapl', [
             new Map([['date', 1], ['open', 2.12]]),
             new Map([['date', 2], ['open', 2.27]]),

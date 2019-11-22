@@ -25,11 +25,6 @@ export default (data, capital) => {
         [...data.timeSeries].sort(sortBy('date', instrumentKey)),
         item => item.get('date'),
     );
-    const instructionsGroupedByDate = groupBy(
-        [...data.instructions].sort(sortBy('date', 'instrument')),
-        item => item.date,
-    );
-
 
     // Create positions/orders for every entry in timeSeries
     const tradeResult = timeSeriesGroupedByDate.reduce((
@@ -38,9 +33,9 @@ export default (data, capital) => {
         index,
     ) => {
 
-        // Get instructions; as every entry in timeSeries has an entry in instructions, we can
-        // directly access instructions with the index of timeSeries.
-        const [, instructionSet] = instructionsGroupedByDate[index];
+        // Get instructions for current date
+        const instructionSet = data.instructions
+            .filter(instruction => instruction.date === date);
 
         // Creates a Map.<string, number> from timeSeries where key is the instrument name and
         // value is the price type
@@ -71,6 +66,15 @@ export default (data, capital) => {
                 cash: previousEntry.cash,
                 positionValues: previousEntry.positionValues,
             },
+        );
+
+        const pad = nr => (nr < 10 ? `0${nr}` : `${nr}`);
+        const dateObject = new Date(date);
+        debug(
+            '%o-%o-%o: Orders are %o, positions %o',
+            pad(dateObject.getDate()), pad(dateObject.getMonth() + 1, dateObject.getFullYear()),
+            result.orders,
+            result.positions.map(pos => ({ instrument: pos.instrument, size: pos.size })),
         );
 
         // On first run, previous are the initial values (-1) – don't store them

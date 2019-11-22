@@ -15,11 +15,13 @@ class HighStockView extends HTMLElement {
         // Add scroll wheel support, see http://jsfiddle.net/d_paul/xcqd8ccb/11/
         const extendedData = {
             ...data,
+            tooltip: {
+                valueDecimals: 2,
+            },
             mapNavigation: { enableMouseWheelZoom: true },
-
-        };
-        extendedData.xAxis = {
-            scrollbar: { enabled: true },
+            xAxis: {
+                scrollbar: { enabled: true },
+            },
         };
 
         Highcharts.stockChart(div, extendedData);

@@ -24,11 +24,11 @@ export default function createOHLCOutput(instrumentData, name) {
         return { spareFields: allTimeSeriesFields };
     }
 
-    // Create data
+    // Create data as [[date, o, h, l, c], [date, o, h, l, c] …]
     const ohlc = instrumentData.map(entry => ohlcFields.reduce((prev, fieldName) => (
         [...prev, entry.get(fieldName)]
     ), []));
-    // Remove o, h, l and c from allTimeSeriesFields
+    // Remove o, h, l and c from allTimeSeriesFields; use slice(1) to remove date.
     ohlcFields.slice(1).forEach(fieldName => allTimeSeriesFields.delete(fieldName));
 
     return {

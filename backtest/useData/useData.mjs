@@ -7,11 +7,10 @@ const { debug } = logger('WalkForward:useData');
 /**
  * Transforms raw data from any source into internal data that is passed from function to function
  */
-export default function useData(emptyData, fetchFunction) {
+export default function useData(emptyData, csvData) {
 
     debug('useData called');
 
-    const data = fetchFunction();
     // We add instrument to the existing timeEntries; in order to prevent clashes with existing
     // keys, we use a Symbol as the key for instrument data.
     const instrumentKey = Symbol('instrumentKey');
@@ -27,7 +26,7 @@ export default function useData(emptyData, fetchFunction) {
     };
 
     // Go through every instrument
-    for (const [instrumentName, instrumentData] of data) {
+    for (const [instrumentName, instrumentData] of csvData) {
         result.instruments.add(instrumentName);
         // Check if dates are duplicate
         const usedDates = new Set();

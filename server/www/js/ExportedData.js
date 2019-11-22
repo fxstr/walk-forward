@@ -18,7 +18,7 @@ export default class ExportedData {
 
     updateData(data) {
         this.data = data;
-        console.log('Data changed to', data);
+        // console.log('Data changed to', data);
         this.emit('change', data);
     }
 

@@ -56,7 +56,9 @@ export default (
             // Deduct size of existing position from new position size
             size - ((positions.find(existingPosition =>
                 existingPosition.instrument === instrument) || {}).size || 0),
-        ]));
+        ])
+        // Remove orders witz size 0, there is nothing to execute
+        .filter(([, size]) => size !== 0));
 
 
     // Orders should be valid until they are fulfilled (GTC). Therefore merge old unfulfilled

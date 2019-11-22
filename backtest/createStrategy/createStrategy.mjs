@@ -5,7 +5,9 @@ import writeFile from '../writeFile/writeFile.mjs';
 import addViewOptions from '../addViewOptions/addViewOptions.mjs';
 import configure from '../configure/configure.mjs';
 import trade from '../trade/trade.mjs';
-import select from '../select/select.mjs';
+import select from '../instructions/select.mjs';
+import weight from '../instructions/weight.mjs';
+import rest from '../instructions/rest.mjs';
 
 /**
  * Returns an object which contains all methods that can be called on a strategy (sort,
@@ -15,16 +17,32 @@ import select from '../select/select.mjs';
  *                          is an array with [methodFunction, argument1, argument2, …].
  * @return {Object}         Object with keys for all methods that can be called on the stack.
  */
-const createStrategy = (stack = []) => ({
-    useData: (...params) => createStrategy([...stack, [useData, ...params]]),
-    addIndicator: (...params) => createStrategy([...stack, [addIndicator, ...params]]),
-    addViewOptions: (...params) => createStrategy([...stack, [addViewOptions, ...params]]),
-    writeFile: (...params) => createStrategy([...stack, [writeFile, ...params]]),
-    run: capital => run(stack, capital),
-    configure: (...params) => createStrategy([...stack, [configure, ...params]]),
-    getData: callback => createStrategy([...stack, [callback]]),
-    trade: (...params) => createStrategy([...stack, [trade, ...params]]),
-    select: (...params) => createStrategy([...stack, [select, ...params]]),
-});
+const createStrategy = (stack = []) => {
+
+    const methods = [
+        ['useData', useData],
+        ['addIndicator', addIndicator],
+        ['addViewOptions', addViewOptions],
+        ['writeFile', writeFile],
+        ['configure', configure],
+        ['trade', trade],
+        ['select', select],
+        ['weight', weight],
+        ['rest', rest],
+    ];
+
+    // Add every method to object and set value to a function that
+    // a) adds called method and params to the stack
+    // b) returns a new object
+    const object = methods.reduce((prev, [methodName, methodFunction]) => ({
+        ...prev,
+        [methodName]: (...params) => createStrategy([...stack, [methodFunction, ...params]]),
+    }), {});
+
+    object.run = capital => run(stack, capital);
+
+    return object;
+
+};
 
 export default createStrategy;

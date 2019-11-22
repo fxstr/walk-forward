@@ -2,6 +2,10 @@ import logger from '../logger/logger.mjs';
 
 const { debug } = logger('WalkForward:exportResult');
 
+/**
+ * Exports timeSeries.result, i.e. the outcome of a trade with the positions and values over time,
+ * into Highstock format
+ */
 export default () => (data) => {
     debug('RESULT is %o', data.result);
 

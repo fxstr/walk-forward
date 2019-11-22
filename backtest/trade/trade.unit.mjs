@@ -15,7 +15,7 @@ test('throws on invalid config', (t) => {
     t.throws(() => trade(undefined, false), /capital that is a number/);
 });
 
-test('converts data as expected', (t) => {
+test('converts data for trade as expected', (t) => {
     const { data } = createTestData();
 
     // Update/overwrite instructions
@@ -25,8 +25,8 @@ test('converts data as expected', (t) => {
         createInstruction('aapl', 1, -1, 2),
         createInstruction('amzn', 2, 1, 3),
         createInstruction('aapl', 2, -1, 2),
-        // Weight 0 closes position
-        createInstruction('aapl', 6, 1, 0),
+        // Select 0 closes position
+        createInstruction('aapl', 4, 0),
     ].forEach((item) => {
         const index = data.instructions.findIndex(findInstructionIndex(item.instrument, item.date));
         if (index === -1) throw new Error(`trade.unit: Index not found for ${JSON.stringify(item)}`);
@@ -98,11 +98,12 @@ test('converts data as expected', (t) => {
         // Had 221.6, bought 25 amzn@21.8 = 545
         cash: 221.6 - (25 * 21.8),
         // aapl stays open, could not be bought
-        orders: new Map([['aapl', 28]]),
+        // amzn is being closed, there are no instructions
+        orders: new Map([['aapl', 28], ['amzn', -25]]),
     });
 
     // Jan 4
-    // aapl will be executed
+    // aapl and amzn will be executed; cancel order for aapl is generated
     const jan4 = new Date(2019, 0, 4, 0, 0, 0).getTime();
     t.deepEqual(result[3], {
         date: jan4,
@@ -115,70 +116,29 @@ test('converts data as expected', (t) => {
                 openDate: jan2,
                 openPrice: 13.9,
             },
-            // amzn stays the same
-            {
-                instrument: 'amzn',
-                size: 25,
-                openDate: jan3,
-                openPrice: 21.8,
-            },
         ],
         // aapl shorted @13.9, now at 14.3 (loss 0.4/instrument), amzn 25@22.3 (evening)
-        positionValues: new Map([['aapl', 28 * (13.9 - 0.4)], ['amzn', 25 * 22.3]]),
-        // Had -323.4, covered 28 aapl@14.1 (loss 0.2/instrument, bought @13.9)
-        cash: -323.4 + (28 * (13.9 - 0.2)),
-        orders: new Map(),
+        positionValues: new Map([['aapl', 28 * (13.9 - 0.4)]]),
+        // Had -323.4, covered 28 aapl@14.1 (loss 0.2/instrument, bought @13.9), sold 25 amzn@21.6
+        cash: -323.4 + (28 * (13.9 - 0.2)) + (25 * 21.6),
+        orders: new Map([['aapl', 28]]),
     });
 
     // Jan 5: No data
 
     // Jan 6
-    // Close aapl
+    // Close aapl, close amzn
     const jan6 = new Date(2019, 0, 6, 0, 0, 0).getTime();
     t.deepEqual(result[4], {
         date: jan6,
-        // Positions are unchanged
-        positions: [
-            {
-                instrument: 'aapl',
-                size: -28,
-                openDate: jan2,
-                openPrice: 13.9,
-            },
-            {
-                instrument: 'amzn',
-                size: 25,
-                openDate: jan3,
-                openPrice: 21.8,
-            },
-        ],
+        // Positions are EMPTY
+        positions: [],
         // aapl shorted @13.9, now at 13.6 (loss 0.3/instrument), amzn 25@22.3 (from jan 4)
-        positionValues: new Map([['aapl', 28 * (13.9 + 0.3)], ['amzn', 25 * 22.3]]),
-        // Same as previous (60.2; we cannot used that number, as JS gets 60.200000000000045)
-        cash: -323.4 + (28 * (13.9 - 0.2)),
+        positionValues: new Map(),
+        // 600.2 from previous + covered 28 aapl@13.4 (from 13.9, gain 0.5/instrument). JS gets
+        // strange numbers
+        cash: 1003.4000000000001,
         // Cover aapl
-        orders: new Map([['aapl', 28]]),
-    });
-
-    // Jan 6
-    // Close aapl
-    const jan7 = new Date(2019, 0, 7, 0, 0, 0).getTime();
-    t.deepEqual(result[5], {
-        date: jan7,
-        positions: [
-            // aapl was closed
-            // amzn is unchanged
-            {
-                instrument: 'amzn',
-                size: 25,
-                openDate: jan3,
-                openPrice: 21.8,
-            },
-        ],
-        // amzn 25@22.3 (from jan 4)
-        positionValues: new Map([['amzn', 25 * 22.3]]),
-        // Was 60.2; covered 28 aapl@13.4 (from 13.9; gain 0.5/instrument)
-        cash: 60.200000000000045 + (28 * (13.9 + 0.5)),
         orders: new Map(),
     });
 
