@@ -13,7 +13,6 @@ function createFileChangeHandler(filePath, response) {
     return () => {
         console.log(`server.mjs: ${filePath} changed.`);
         const content = readFileSync(filePath, 'utf8');
-        console.log(content);
         // Start every line with data:
         // As \n\n starts a new message, convert more than one \n to to just one \n
         // This might become problematic; if it does, we should maybe use WebSockets

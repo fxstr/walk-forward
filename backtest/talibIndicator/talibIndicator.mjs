@@ -1,4 +1,5 @@
-import getSortedDataForInstrument from '../dataHelpers/getSortedDataForInstrument.mjs';
+import sortBy from '../dataHelpers/sortBy.mjs';
+import groupBy from '../dataHelpers/groupBy.mjs';
 import executeTalibIndicator from './executeTalibIndicator.mjs';
 import createDataForTalib from './createDataForTalib.mjs';
 import generateIndexesFromData from './generateIndexesFromTalibData.mjs';
@@ -42,12 +43,21 @@ export default function talibIndicator({
     // current data
     return async(data) => {
 
+        const groupedAndSortedTimeSeries = new Map(groupBy(
+            [...data.timeSeries].sort(sortBy('date')),
+            item => item.get(data.instrumentKey),
+        ));
+
         let returnValue = [];
 
         debug('Add talib indicator to %o', data.instruments);
+
         for await (const instrumentName of data.instruments) {
 
-            const dataForTalib = createDataForTalib(data, instrumentName, inputs);
+            const dataForTalib = createDataForTalib(
+                groupedAndSortedTimeSeries.get(instrumentName),
+                inputs,
+            );
 
             // Get startIndex and endIndex from data
             const indexes = generateIndexesFromData(dataForTalib);
@@ -66,7 +76,7 @@ export default function talibIndicator({
             // Convert data to format expected by addIndicator
             const returnData = createDataFromTalib(
                 indicatorData,
-                getSortedDataForInstrument(data, instrumentName).map(entry => entry.get('date')),
+                groupedAndSortedTimeSeries.get(instrumentName).map((entry => entry.get('date'))),
                 instrumentName,
                 outputs,
             );

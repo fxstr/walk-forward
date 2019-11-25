@@ -21,11 +21,15 @@ export default instrumentName => (data) => {
         // from the clone. This reduces the params passed to createHighstockSeries.
         .map(entry => new Map(Array.from(entry.entries()).filter(notInstrumentKey)));
 
+    // There is no data for instrumentName: Name was probably misspelled
+    if (!instrumentData.length) {
+        throw new Error(`convertInstrumentToHighstock: Instrument ${instrumentName} does not exist; please use any of ${Array.from(data.instruments).join(', ')}.`);
+    }
+
     const result = {
         series: [],
         yAxis: [],
     };
-
 
     // OHLC
     const { spareFields, series: ohlcSeries } = createOHLCOutput(instrumentData, instrumentName);

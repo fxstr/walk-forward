@@ -1,7 +1,9 @@
+import { performance } from 'perf_hooks';
 import sortBy from '../dataHelpers/sortBy.mjs';
 import groupBy from '../dataHelpers/groupBy.mjs';
 import tradeForDate from './tradeForDate.mjs';
 import logger from '../logger/logger.mjs';
+import spinner from '../spinner/spinner.mjs';
 
 const { debug } = logger('WalkForward:trade');
 
@@ -16,6 +18,9 @@ const { debug } = logger('WalkForward:trade');
  */
 export default (data, capital) => {
 
+    const startTime = performance.now();
+    const output = spinner('Start trading …');
+
     if (typeof capital !== 'number') {
         throw new Error(`trade: Pass parameter capital that is a number; you passed ${capital} instead.`);
     }
@@ -26,6 +31,11 @@ export default (data, capital) => {
         item => item.get('date'),
     );
 
+    const instructionsGroupedByDate = new Map(groupBy(
+        data.instructions,
+        item => item.date,
+    ));
+
     // Create positions/orders for every entry in timeSeries
     const tradeResult = timeSeriesGroupedByDate.reduce((
         previous,
@@ -34,18 +44,16 @@ export default (data, capital) => {
     ) => {
 
         // Get instructions for current date
-        const instructionSet = data.instructions
-            .filter(instruction => instruction.date === date);
+        const instructionSet = instructionsGroupedByDate.get(date);
 
         // Creates a Map.<string, number> from timeSeries where key is the instrument name and
-        // value is the price type
+        // value is the price type (e.g. 'open')
         const getPriceType = (series, type) => new Map(series
             .map(entry => [entry.get(data.instrumentKey), entry.get(type)]));
 
-        // Map with key: instrumentName, value: open
+        // Map with key: instrumentName, value: opening/closing price
         const openPrices = getPriceType(timeSeriesEntries, 'open');
         const closePrices = getPriceType(timeSeriesEntries, 'close');
-
 
         const previousEntry = previous.slice(-1).pop();
 
@@ -66,15 +74,6 @@ export default (data, capital) => {
                 cash: previousEntry.cash,
                 positionValues: previousEntry.positionValues,
             },
-        );
-
-        const pad = nr => (nr < 10 ? `0${nr}` : `${nr}`);
-        const dateObject = new Date(date);
-        debug(
-            '%o-%o-%o: Orders are %o, positions %o',
-            pad(dateObject.getDate()), pad(dateObject.getMonth() + 1, dateObject.getFullYear()),
-            result.orders,
-            result.positions.map(pos => ({ instrument: pos.instrument, size: pos.size })),
         );
 
         // On first run, previous are the initial values (-1) – don't store them
@@ -98,6 +97,11 @@ export default (data, capital) => {
             .from(tradeResult.slice(-1).pop().positionValues.values())
             .reduce((prev, value) => prev + value, 0),
     );
+
+    const endTime = performance.now();
+    const totalTime = Math.round(endTime - startTime);
+    const timePerEntry = Math.round((totalTime / timeSeriesGroupedByDate.length) * 100) / 100;
+    output.succeed(`Trading done for ${timeSeriesGroupedByDate.length} dates in ${totalTime} ms, ${timePerEntry} ms per entry`);
 
     return {
         ...data,

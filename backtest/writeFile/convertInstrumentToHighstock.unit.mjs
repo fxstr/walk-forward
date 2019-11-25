@@ -98,6 +98,13 @@ test('creates new panel, uses line as default', (t) => {
     });
 });
 
+test('fails if instrument does not exist', (t) => {
+    const { data } = createTestData();
+    t.throws(
+        () => convertInstrumentToHighstock('nope')(data),
+        /Instrument nope does not exist; please use any of aapl, amzn/,
+    );
+});
 
 test('does not output if panel is false', (t) => {
     const { data } = createTestData();

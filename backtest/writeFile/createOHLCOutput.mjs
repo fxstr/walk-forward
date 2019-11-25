@@ -4,12 +4,12 @@ const { debug } = logger('WalkForward:createOHLCOutput');
 
 /**
  * Creates output for OHLC.
- * @param  {Map[]} data         Instrument data to be exported
- * @param {string}  name        Name of the instrument the data is exported for
- * @return {Object|undefined}   If OHLC data exsits: Object with keys
- *                              - series : Highstock config for series
- *                              - spareFields: All fields other than the ones used for OHLC
- *                              If OHLC data does not exist, returns undefined
+ * @param  {Map[]} instrumentData  Instrument data to be exported
+ * @param {string}  name           Name of the instrument the data is exported for
+ * @return {Object|undefined}      If OHLC data exsits: Object with keys
+ *                                 - series : Highstock config for series
+ *                                 - spareFields: All fields other than the ones used for OHLC
+ *                                 If OHLC data does not exist, returns undefined
  */
 export default function createOHLCOutput(instrumentData, name) {
 

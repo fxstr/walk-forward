@@ -1,6 +1,8 @@
+import { performance } from 'perf_hooks';
 import createDefaultInstructions from './createDefaultInstructions.mjs';
 import logger from '../logger/logger.mjs';
 import createDefaultConfiguration from './createDefaultConfiguration.mjs';
+import spinner from '../spinner/spinner.mjs';
 
 const { debug } = logger('WalkForward:useData');
 
@@ -10,6 +12,8 @@ const { debug } = logger('WalkForward:useData');
 export default function useData(emptyData, csvData) {
 
     debug('useData called');
+    const startTime = performance.now();
+    const output = spinner('Loading files …');
 
     // We add instrument to the existing timeEntries; in order to prevent clashes with existing
     // keys, we use a Symbol as the key for instrument data.
@@ -25,6 +29,8 @@ export default function useData(emptyData, csvData) {
         configuration: createDefaultConfiguration(),
     };
 
+    let fileIndex = 0;
+
     // Go through every instrument
     for (const [instrumentName, instrumentData] of csvData) {
         result.instruments.add(instrumentName);
@@ -36,7 +42,7 @@ export default function useData(emptyData, csvData) {
 
             // Make sure date is valid
             if (typeof timeEntry.get('date') !== 'number') {
-                throw new Error(`useData: Every row must contain a property 'date' which is a timestamp; this is not the case for row ${JSON.stringify(timeEntry)} of instrument ${instrumentName}.`);
+                throw new Error(`useData: Every row must contain a property 'date' which is a timestamp; this is not the case for row ${JSON.stringify(Array.from(timeEntry.values()))} of instrument ${instrumentName}.`);
             }
 
             // Check if date is a duplicate for a given instrument
@@ -59,7 +65,13 @@ export default function useData(emptyData, csvData) {
 
         }
 
+        fileIndex++;
+        output.setText(`Loading files ${fileIndex}/${csvData.size}`);
+
     }
+
+    const endTime = performance.now();
+    output.succeed(`${csvData.size} files loaded in ${Math.round(endTime - startTime)} ms`);
 
     return result;
 

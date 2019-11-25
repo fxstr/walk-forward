@@ -35,7 +35,6 @@ export default (
         .from(positionValues.values())
         .reduce((prev, value) => prev + value, 0);
 
-
     // Create expected positions for next bar. Sizes are absolute (-28 means that we should be
     // 28 total short, not add another short position of 28).
     const newPositions = createOrders(

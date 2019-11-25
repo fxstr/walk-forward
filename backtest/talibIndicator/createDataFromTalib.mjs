@@ -1,10 +1,11 @@
 /**
  * Converts talib data back to data that is expected by addIndicator()
- * @param {Object} talibData            Data returned by talib, e.g. { talibKey: [5, 3, 4] }
- * @param {Number[]} sortedDates        Chronologically sorted array of dates for the instrument
+ * @param {object.<string, number[]>} talibData    Data returned by talib, e.g.
+ *                                      { talibKey: [5, 3, 4] }
+ * @param {number[]} sortedDates        Chronologically sorted array of dates for the instrument
  *                                      we created the indicator for.
- * @param {String} instrumentName       Name of current instrument
- * @param {Object} outputOptions        Mapping for output:
+ * @param {string} instrumentName       Name of current instrument
+ * @param {object} outputOptions        Mapping for output:
  *                                      - key: talibName
  *                                      - value: name in new column
  * @return {Map[]}                      Array of Maps, each Map with fields
