@@ -39,12 +39,12 @@ export default async(data, indicatorFunction) => {
     // Get a meaningful data structure to reduce lookups on this.data.timeSeries when adding
     // indicator data
     const groupedIndicatorData = new Map(groupBy(
-        [...indicatorData].sort(sortBy('date')),
+        indicatorData,
         entry => entry.get('instrument'),
     ));
 
     const groupedData = new Map(groupBy(
-        [...data.timeSeries].sort(sortBy('date')),
+        data.timeSeries,
         entry => entry.get(data.instrumentKey),
     ));
 
@@ -85,7 +85,9 @@ export default async(data, indicatorFunction) => {
         ))
 
         // Merge data of all instruments into one array
-        .reduce((prev, instrumentData) => [...prev, ...instrumentData], []);
+        .reduce((prev, instrumentData) => [...prev, ...instrumentData], [])
+        // TODO: Remove when addIndicator was re-implemented
+        .sort(sortBy('date', data.instrumentKey));
 
     const endTime = performance.now();
     output.succeed(`Added indicator in ${Math.round(endTime - startTime)} ms; indicator took took ${Math.round(indicatorTime - startTime)} ms`);

@@ -2,10 +2,12 @@ import test from 'ava';
 import addIndicator from './addIndicator.mjs';
 import createTestData from '../testData/createTestData.mjs';
 import walkStructure from '../dataHelpers/walkStructure.mjs';
-
+import sortBy from '../dataHelpers/sortBy.mjs';
 
 const setupData = () => {
     const { data } = createTestData();
+    // TODO: Remove when createTestData is sorted
+    data.timeSeries.sort(sortBy('date', data.instrumentKey));
     const indicatorData = data.timeSeries.map((entry, index) => new Map([
         ['date', entry.get('date')],
         ['instrument', entry.get(data.instrumentKey)],
@@ -70,7 +72,7 @@ test('adds indicator data correctly', async(t) => {
     t.deepEqual(
         result.timeSeries.map(entry => entry.get('indicatorName')),
         // First all aapl, then all amzn
-        [0, 1, 3, 5, 4, 2, 6, 7],
+        [0, 1, 2, 3, 4, 5, 6, 7],
     );
 
 });

@@ -46,19 +46,19 @@ test('returns correctly formatted data', (t) => {
     // instrumentKey
     t.is(typeof data.instrumentKey === 'symbol', true);
 
-    // timeSeries
+    // timeSeries – sorted by date/instrument
     t.deepEqual(data.timeSeries, [new Map([
         ['date', 1],
         ['open', 2.12],
         [data.instrumentKey, 'aapl'],
     ]), new Map([
-        ['date', 2],
-        ['open', 2.27],
-        [data.instrumentKey, 'aapl'],
-    ]), new Map([
         ['date', 1],
         ['open', 3.27],
         [data.instrumentKey, 'amzn'],
+    ]), new Map([
+        ['date', 2],
+        ['open', 2.27],
+        [data.instrumentKey, 'aapl'],
     ]), new Map([
         ['date', 3],
         ['open', 4.02],

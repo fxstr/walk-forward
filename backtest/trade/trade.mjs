@@ -25,14 +25,13 @@ export default (data, capital) => {
         throw new Error(`trade: Pass parameter capital that is a number; you passed ${capital} instead.`);
     }
 
-    const { instrumentKey } = data;
     const timeSeriesGroupedByDate = groupBy(
-        [...data.timeSeries].sort(sortBy('date', instrumentKey)),
+        [...data.timeSeries].sort(sortBy('date', data.instrumentKey)),
         item => item.get('date'),
     );
 
     const instructionsGroupedByDate = new Map(groupBy(
-        data.instructions,
+        [...data.instructions].sort(sortBy('date', 'instrument')),
         item => item.date,
     ));
 

@@ -3,6 +3,7 @@ import createDefaultInstructions from './createDefaultInstructions.mjs';
 import logger from '../logger/logger.mjs';
 import createDefaultConfiguration from './createDefaultConfiguration.mjs';
 import spinner from '../spinner/spinner.mjs';
+import sortBy from '../dataHelpers/sortBy.mjs';
 
 const { debug } = logger('WalkForward:useData');
 
@@ -22,7 +23,10 @@ export default function useData(emptyData, csvData) {
     const result = {
         instruments: new Set(),
         instrumentKey,
+        // Must always be sorted chronologically. If we have to re-sort during execution, we lose
+        // a few secs for every sort operation
         timeSeries: [],
+        // Must always be sorted chronologically (see timeSeries above)
         instructions: [],
         viewOptions: {},
         result: {},
@@ -69,6 +73,10 @@ export default function useData(emptyData, csvData) {
         output.setText(`Loading files ${fileIndex}/${csvData.size}`);
 
     }
+
+    // Sort everything chronologically and thereafter by instrument name
+    result.instructions.sort(sortBy('date', instrumentKey));
+    result.timeSeries.sort(sortBy('date', 'instrument'));
 
     const endTime = performance.now();
     output.succeed(`${csvData.size} files loaded in ${Math.round(endTime - startTime)} ms`);

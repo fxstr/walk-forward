@@ -15,6 +15,7 @@ export default function createTestData() {
         ['aapl', 7, 13.4, 13.1],
         ['aapl', 6, 13.4, 13.6],
         // Make sure data is not sorted chronologically
+        // TODO: Remove to make sure we only accept sorted data
         ['amzn', 3, 21.8, 22.0],
         ['amzn', 4, 21.6, 22.3],
     ];

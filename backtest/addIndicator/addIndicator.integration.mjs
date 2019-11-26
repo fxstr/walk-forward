@@ -6,10 +6,13 @@ import addIndicator from './addIndicator.mjs';
 import talibIndicator from '../talibIndicator/talibIndicator.mjs';
 import createTestData from '../testData/createTestData.mjs';
 import findInTimeSeries from '../dataHelpers/findInTimeSeries.mjs';
+import sortBy from '../dataHelpers/sortBy.mjs';
 
 test('creates correct data', async(t) => {
 
     const { data, instrumentKey } = createTestData();
+    // TODO: Remove sort
+    data.timeSeries.sort(sortBy('date', data.instrumentKey));
     const result = await addIndicator(
         data,
         talibIndicator({
