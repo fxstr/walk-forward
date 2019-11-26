@@ -33,6 +33,7 @@ test('uses correct arguments for selectFunction', (t) => {
     let counter = 0;
     const ts = data.timeSeries;
     createInstructionMethod(data, (...args) => {
+        // Jan 1 for aapl
         if (counter === 0) {
             t.deepEqual(args, [
                 // Jan 1 for aapl
@@ -47,13 +48,14 @@ test('uses correct arguments for selectFunction', (t) => {
                 ]),
             ]);
         }
+        // Jan 3 for amzn
         if (counter === 3) {
             t.deepEqual(args, [
-                [ts[6], ts[2]],
+                [ts[3], ts[2]],
                 'amzn',
                 new Map([
                     ['aapl', [ts[1], ts[0]]],
-                    ['amzn', [ts[6], ts[2]]],
+                    ['amzn', [ts[3], ts[2]]],
                 ]),
             ]);
         }

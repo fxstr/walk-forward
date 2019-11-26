@@ -5,19 +5,19 @@ import createDefaultConfiguration from '../useData/createDefaultConfiguration.mj
  */
 export default function createTestData() {
 
+    // Sorted chronologically and then alphabetically
     const scaffold = [
         // Instrument, 2019-01-xx, open, close
         ['aapl', 1, 13.2, 14.1],
         ['aapl', 2, 13.9, 13.1],
         // Make sure both instruments don't start at the same time
         ['amzn', 2, 22.2, 22.1],
-        ['aapl', 4, 14.1, 14.3],
-        ['aapl', 7, 13.4, 13.1],
-        ['aapl', 6, 13.4, 13.6],
-        // Make sure data is not sorted chronologically
-        // TODO: Remove to make sure we only accept sorted data
+        // Make sure there are dates with no data for one instrument
         ['amzn', 3, 21.8, 22.0],
+        ['aapl', 4, 14.1, 14.3],
         ['amzn', 4, 21.6, 22.3],
+        ['aapl', 6, 13.4, 13.6],
+        ['aapl', 7, 13.4, 13.1],
     ];
 
     const instrumentKey = Symbol('instrumentKey');

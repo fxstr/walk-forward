@@ -1,5 +1,4 @@
 import { performance } from 'perf_hooks';
-import sortBy from '../dataHelpers/sortBy.mjs';
 import groupBy from '../dataHelpers/groupBy.mjs';
 import tradeForDate from './tradeForDate.mjs';
 import logger from '../logger/logger.mjs';
@@ -26,12 +25,12 @@ export default (data, capital) => {
     }
 
     const timeSeriesGroupedByDate = groupBy(
-        [...data.timeSeries].sort(sortBy('date', data.instrumentKey)),
+        data.timeSeries,
         item => item.get('date'),
     );
 
     const instructionsGroupedByDate = new Map(groupBy(
-        [...data.instructions].sort(sortBy('date', 'instrument')),
+        data.instructions,
         item => item.date,
     ));
 

@@ -1,5 +1,4 @@
 import { performance } from 'perf_hooks';
-import sortBy from '../dataHelpers/sortBy.mjs';
 import groupBy from '../dataHelpers/groupBy.mjs';
 import spinner from '../spinner/spinner.mjs';
 
@@ -30,20 +29,13 @@ export default (data, instructionFunction, instructionField, validateFunction = 
 
     const { instrumentKey } = data;
 
-    // Sort timeSeries and instructions the same way so that we can access the matching data pair
-    // (same date and instrument) by using indexes.
-    // const t0 = performance.now();
-    const sortedData = [...data.timeSeries].sort(sortBy('date', instrumentKey));
-    const sortedInstructions = [...data.instructions].sort(sortBy('date', 'instrument'));
-    // const t1 = performance.now();
-    // console.log('sorting createInstructionMethod took', t1 - t0);
     const dataGroupedByDate = groupBy(
-        sortedData,
+        data.timeSeries,
         item => item.get('date'),
     );
 
-    if (sortedData.length !== sortedInstructions.length) {
-        throw new Error(`createInstructionMethod: timeSeries and instructions must have the same size, is ${sortedData.length} vs. ${sortedInstructions.length}.`);
+    if (data.timeSeries.length !== data.instructions.length) {
+        throw new Error(`createInstructionMethod: timeSeries and instructions must have the same size, is ${data.timeSeries.length} vs. ${data.instructions.length}.`);
     }
 
     // Re-use dataForMethod to improve performance; if we don't optimize for speed, calls may
@@ -105,9 +97,8 @@ export default (data, instructionFunction, instructionField, validateFunction = 
     }
 
 
-
     const instructions = instructionsByDate.flat();
-    const finalInstructions = sortedInstructions.map((instruction, index) => ({
+    const finalInstructions = data.instructions.map((instruction, index) => ({
         ...instruction,
         [instructionField]: instructions[index],
     }));
@@ -115,8 +106,8 @@ export default (data, instructionFunction, instructionField, validateFunction = 
 
     const endTime = performance.now();
     const timeDiff = Math.round(endTime - startTime);
-    const timePerInstruction = Math.round((timeDiff / sortedInstructions.length) * 100) / 100;
-    output.succeed(`Executed ${instructionField}, created ${sortedInstructions.length} instructions in ${timeDiff} ms (${timePerInstruction} per instruction)`);
+    const timePerInstruction = Math.round((timeDiff / data.instructions.length) * 1000) / 1000;
+    output.succeed(`Executed ${instructionField}, created ${data.instructions.length} instructions in ${timeDiff} ms (${timePerInstruction} per instruction)`);
 
     return {
         ...data,

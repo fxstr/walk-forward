@@ -10,7 +10,7 @@
  */
 export default function generateIndexesFromTalibData(talibData) {
 
-    return Object.values(talibData).reduce((prev, dataSet) => (
+    const indexes = Object.values(talibData).reduce((prev, dataSet) => (
         {
             endIdx: Math.min(prev.endIdx, dataSet.length - 1),
             // startIdx: Math.max(
@@ -18,5 +18,6 @@ export default function generateIndexesFromTalibData(talibData) {
             startIdx: 0,
         }
     ), { startIdx: 0, endIdx: Infinity });
+    return indexes;
 
 }

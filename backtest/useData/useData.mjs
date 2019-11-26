@@ -57,11 +57,10 @@ export default function useData(emptyData, csvData) {
 
             // Add instrumentName to existing timeEntry; use instrumentKey to not overwrite an
             // existing object key
-            const entryWithInstrument = new Map(timeEntry);
-            entryWithInstrument.set(instrumentKey, instrumentName);
+            const entryWithInstrument = new Map([...timeEntry, [instrumentKey, instrumentName]]);
             result.timeSeries.push(entryWithInstrument);
 
-            // Add corresponding instructions
+            // Create and add corresponding instructions
             result.instructions.push(createDefaultInstructions(
                 instrumentName,
                 timeEntry.get('date'),

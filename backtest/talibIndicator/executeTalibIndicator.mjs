@@ -1,5 +1,11 @@
 import talib from 'talib';
 
+/**
+ * Executes a talib indicator
+ * @param  {Object} options    Options for talib call
+ * @return {Promise}           Promise that is resolved when indicator has been executed. Resolves
+ *                             to an object with key (row name) and value (array of values)
+ */
 export default function executeTalibIndicator(options) {
 
     return new Promise((resolve, reject) => {

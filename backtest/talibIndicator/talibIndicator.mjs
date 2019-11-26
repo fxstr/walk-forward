@@ -1,10 +1,9 @@
-import sortBy from '../dataHelpers/sortBy.mjs';
-import groupBy from '../dataHelpers/groupBy.mjs';
+import { performance } from 'perf_hooks';
 import executeTalibIndicator from './executeTalibIndicator.mjs';
-import createDataForTalib from './createDataForTalib.mjs';
 import generateIndexesFromData from './generateIndexesFromTalibData.mjs';
-import createDataFromTalib from './createDataFromTalib.mjs';
 import logger from '../logger/logger.mjs';
+import convertColsToRows from '../addIndicator/convertColsToRows.mjs';
+import addRowsToTimeSeries from '../addIndicator/addRowsToTimeSeries.mjs';
 
 const { debug } = logger('WalkForward:talibIndicator');
 
@@ -43,21 +42,25 @@ export default function talibIndicator({
     // current data
     return async(data) => {
 
-        const groupedAndSortedTimeSeries = new Map(groupBy(
-            [...data.timeSeries].sort(sortBy('date')),
-            item => item.get(data.instrumentKey),
-        ));
+        const start = performance.now();
 
-        let returnValue = [];
+        const dataAsRows = convertColsToRows(
+            data.timeSeries,
+            data.instrumentKey,
+            Object.values(inputs),
+        );
 
         debug('Add talib indicator to %o', data.instruments);
 
-        for await (const instrumentName of data.instruments) {
+        const indicators = new Map();
+        for await (const [instrumentName, instrumentData] of dataAsRows) {
 
-            const dataForTalib = createDataForTalib(
-                groupedAndSortedTimeSeries.get(instrumentName),
-                inputs,
-            );
+            // Convert dataAsRows from map and original row names to object and talib row names
+            const dataForTalib = Object.entries(inputs)
+                .reduce((prev, [talibRowName, originalRowName]) => ({
+                    ...prev,
+                    [talibRowName]: instrumentData.get(originalRowName),
+                }), {});
 
             // Get startIndex and endIndex from data
             const indexes = generateIndexesFromData(dataForTalib);
@@ -73,19 +76,16 @@ export default function talibIndicator({
             debug('Options for talib are %o', talibOptions);
             const indicatorData = await executeTalibIndicator(talibOptions);
 
-            // Convert data to format expected by addIndicator
-            const returnData = createDataFromTalib(
-                indicatorData,
-                groupedAndSortedTimeSeries.get(instrumentName).map((entry => entry.get('date'))),
-                instrumentName,
-                outputs,
-            );
+            // addRowsToTimeSeries expects a map; therefore we convert indicatorData to a Map
+            // and convert the column names from their talib to the official name
+            const reformattedIndicatorData = new Map(Object.entries(indicatorData)
+                .map(([talibRowName, values]) => [outputs[talibRowName], values]));
 
-            returnValue = [...returnValue, ...returnData];
+            indicators.set(instrumentName, reformattedIndicatorData);
 
         }
 
-        return returnValue;
+        return addRowsToTimeSeries(indicators, data.timeSeries, data.instrumentKey);
 
     };
 

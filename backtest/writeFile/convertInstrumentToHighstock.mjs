@@ -1,4 +1,3 @@
-import getSortedDataForInstrument from '../dataHelpers/getSortedDataForInstrument.mjs';
 import logger from '../logger/logger.mjs';
 import createOHLCOutput from './createOHLCOutput.mjs';
 import createPanels from './createPanels.mjs';
@@ -16,7 +15,8 @@ export default instrumentName => (data) => {
 
     // Filter function to check whether an entry of timeSeries is not the instrument
     const notInstrumentKey = ([key]) => key !== data.instrumentKey;
-    const instrumentData = getSortedDataForInstrument(data, instrumentName)
+    const instrumentData = data.timeSeries
+        .filter(entry => entry.get(data.instrumentKey) === instrumentName)
         // Remove field instrument from data; to do so, first clone data, then remove the field
         // from the clone. This reduces the params passed to createHighstockSeries.
         .map(entry => new Map(Array.from(entry.entries()).filter(notInstrumentKey)));
