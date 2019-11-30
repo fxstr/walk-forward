@@ -14,14 +14,18 @@ test('provides all methods', (t) => {
         'select',
         'weight',
         'rest',
+        'truncate',
+        'do',
     ];
 
+    // Necessary methods
     methods.forEach((method) => {
         if (!Object.prototype.hasOwnProperty.call(strategy, method)) {
             t.fail(`Method ${method} not found in createStrategy`);
         }
     });
 
+    // Unexpected methods
     Object.keys(strategy).forEach((method) => {
         if (!methods.includes(method)) {
             t.fail(`Method ${method} is unexpected on createStrategy`);

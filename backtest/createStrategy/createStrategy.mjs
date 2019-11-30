@@ -8,6 +8,8 @@ import trade from '../trade/trade.mjs';
 import select from '../instructions/select.mjs';
 import weight from '../instructions/weight.mjs';
 import rest from '../instructions/rest.mjs';
+import doFunction from '../do/do.mjs';
+import truncate from '../truncate/truncate.mjs';
 
 /**
  * Returns an object which contains all methods that can be called on a strategy (sort,
@@ -29,6 +31,8 @@ const createStrategy = (stack = []) => {
         ['select', select],
         ['weight', weight],
         ['rest', rest],
+        ['truncate', truncate],
+        ['do', doFunction],
     ];
 
     // Add every method to object and set value to a function that

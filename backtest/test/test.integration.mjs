@@ -30,6 +30,13 @@ async function executeTest() {
             ],
         ))
 
+        .truncate(
+            // Oct is month 9
+            // JS uses UTC time for new Date('yyyy-mm-dd') – we have to adjust for them
+            new Date(2018, 9, 9, new Date(2018, 9, 9).getTimezoneOffset() / -60, 0, 0).getTime(),
+            new Date(2019, 9, 9, new Date(2019, 9, 9).getTimezoneOffset() / -60, 0, 0).getTime(),
+        )
+
         // Add panel for volume, add volume indicator to it
         .addViewOptions({
             panels: new Map([
@@ -97,6 +104,7 @@ async function executeTest() {
             ]),
         })
 
+        .do(data => data)
 
         .configure({
             investedRatio: 0.9,
