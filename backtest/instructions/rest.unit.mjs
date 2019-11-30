@@ -1,19 +1,22 @@
 import test from 'ava';
 import rest from './rest.mjs';
-import createTestData from '../testData/createTestData.mjs';
 
 test('fails if function returns invalid value', (t) => {
-    const { data } = createTestData();
-    t.throws(() => rest(data, () => 1), /must be boolean/);
+    const data = { instructionFunctions: [] };
+    const newData = rest(data, () => 1);
+    t.throws(() => newData.instructionFunctions[0].validate(1), /must be boolean/);
 });
 
-test('updates selected on instructions', (t) => {
-    const { data } = createTestData();
+test('updates instructionFunctions', (t) => {
+    const data = { instructionFunctions: [] };
     // Set selected to 1 on even dates
     const newData = rest(
         data,
-        item => (new Date(item[0].get('date')).getDate() % 2 !== 0),
+        () => {},
     );
-    const allSelected = newData.instructions.map(({ trade }) => trade);
-    t.deepEqual(allSelected, [false, true, true, false, true, true, true, false]);
+    const [firstInstruction] = newData.instructionFunctions;
+    t.is(firstInstruction.instructionField, 'trade');
+    t.is(typeof firstInstruction.instructionFunction, 'function');
+    t.is(typeof firstInstruction.validate, 'function');
 });
+

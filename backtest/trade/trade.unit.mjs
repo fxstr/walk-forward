@@ -15,6 +15,17 @@ test('throws on invalid config', (t) => {
     t.throws(() => trade(undefined, false), /capital that is a number/);
 });
 
+test.skip('creates instructions for every entry in time series', (t) => {
+    t.pass();
+});
+
+test('runs if instruction functions are missing', (t) => {
+    const { data } = createTestData();
+    const { result } = trade(data, 1000);
+    console.log('result', result);
+    t.is(result.slice(-1).pop().cash, 1000);
+});
+
 test('converts data for trade as expected', (t) => {
     const { data } = createTestData();
 
@@ -144,7 +155,7 @@ test('converts data for trade as expected', (t) => {
 
 });
 
-test('does not modify original data', (t) => {
+test.skip('does not modify original data', (t) => {
     const { data } = createTestData();
     data.instructions[0] = createInstruction('aapl', 1, -1, 2);
     const clone = walkStructure(data);

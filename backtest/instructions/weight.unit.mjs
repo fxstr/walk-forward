@@ -1,19 +1,21 @@
 import test from 'ava';
-import weightFunction from './weight.mjs';
-import createTestData from '../testData/createTestData.mjs';
+import weight from './weight.mjs';
 
 test('fails if function returns invalid value', (t) => {
-    const { data } = createTestData();
-    t.throws(() => weightFunction(data, () => true), /must be a number/);
+    const data = { instructionFunctions: [] };
+    const newData = weight(data, () => true);
+    t.throws(() => newData.instructionFunctions[0].validate(true), /must be a number/);
 });
 
-test('updates selected on instructions', (t) => {
-    const { data } = createTestData();
-    // Set selected to 1 on even dates
-    const newData = weightFunction(
+test('updates instructionFunctions', (t) => {
+    const data = { instructionFunctions: [] };
+    const newData = weight(
         data,
-        item => (new Date(item[0].get('date')).getDate() % 2 === 0 ? 1 : 0),
+        () => {},
     );
-    const allSelected = newData.instructions.map(({ weight }) => weight);
-    t.deepEqual(allSelected, [0, 1, 1, 0, 1, 1, 1, 0]);
+    const [firstInstruction] = newData.instructionFunctions;
+    t.is(firstInstruction.instructionField, 'weight');
+    t.is(typeof firstInstruction.instructionFunction, 'function');
+    t.is(typeof firstInstruction.validate, 'function');
 });
+

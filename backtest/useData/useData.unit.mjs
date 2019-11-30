@@ -35,6 +35,7 @@ test('returns correctly formatted data', (t) => {
         'instrumentKey',
         'timeSeries',
         'instructions',
+        'instructionFunctions',
         'viewOptions',
         'result',
         'configuration',
@@ -46,7 +47,7 @@ test('returns correctly formatted data', (t) => {
     // instrumentKey
     t.is(typeof data.instrumentKey === 'symbol', true);
 
-    // timeSeries – sorted by date/instrument
+    // timeSeries – sorted by date/instrument
     t.deepEqual(data.timeSeries, [new Map([
         ['date', 1],
         ['open', 2.12],
@@ -66,9 +67,8 @@ test('returns correctly formatted data', (t) => {
     ])]);
 
     // instructions (see createDefaultInstructions for detailed tests)
-    t.is(data.instructions.length, 4);
-    t.is(data.instructions[0].instrument, 'aapl');
-    t.is(data.instructions[0].date, 1);
+    t.deepEqual(data.instructions, []);
+    t.deepEqual(data.instructionFunctions, []);
 
     // viewOptions
     t.deepEqual(data.viewOptions, {});

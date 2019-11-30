@@ -1,5 +1,4 @@
 import { performance } from 'perf_hooks';
-import createDefaultInstructions from './createDefaultInstructions.mjs';
 import logger from '../logger/logger.mjs';
 import createDefaultConfiguration from './createDefaultConfiguration.mjs';
 import spinner from '../spinner/spinner.mjs';
@@ -28,6 +27,7 @@ export default function useData(emptyData, csvData) {
         timeSeries: [],
         // Must always be sorted chronologically (see timeSeries above)
         instructions: [],
+        instructionFunctions: [],
         viewOptions: {},
         result: {},
         configuration: createDefaultConfiguration(),
@@ -59,12 +59,6 @@ export default function useData(emptyData, csvData) {
             // existing object key
             const entryWithInstrument = new Map([...timeEntry, [instrumentKey, instrumentName]]);
             result.timeSeries.push(entryWithInstrument);
-
-            // Create and add corresponding instructions
-            result.instructions.push(createDefaultInstructions(
-                instrumentName,
-                timeEntry.get('date'),
-            ));
 
         }
 

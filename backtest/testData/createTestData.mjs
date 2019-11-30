@@ -30,6 +30,7 @@ export default function createTestData() {
             ['close', entry[3]],
             [instrumentKey, entry[0]],
         ])),
+        // TODO: Remove
         instructions: scaffold.map(entry => ({
             date: new Date(2019, 0, entry[1], 0, 0, 0).getTime(),
             instrument: entry[0],
@@ -37,6 +38,7 @@ export default function createTestData() {
             weight: 1,
             trade: 1,
         })),
+        instructionFunctions: [],
         viewOptions: {},
         configuration: createDefaultConfiguration(),
     };
