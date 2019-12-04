@@ -1,3 +1,5 @@
+import calculatePositionValue from '../trade/calculatePositionValue.mjs';
+
 /**
  * Exports Highstock panel and series for results (positions, orders) and instructions (weight,
  * selected, trade).
@@ -16,7 +18,7 @@ export default (results, instructions, instrumentName) => {
 
     // Get result data for current instrument; filter by dates that contain a position for the
     // given instrument
-    const positionData = results
+    const positionSizes = results
         .filter(({ positions }) => positions
             .find(position => position.instrument === instrumentName))
         .map(result => [
@@ -31,6 +33,15 @@ export default (results, instructions, instrumentName) => {
         .map(result => [
             result.date,
             result.orders.get(instrumentName) || 0,
+        ]);
+
+
+    const positionValues = results
+        .filter(({ positions }) => positions
+            .find(position => position.instrument === instrumentName))
+        .map(result => [
+            result.date,
+            result.positionValues.get(instrumentName) || 0,
         ]);
 
 
@@ -49,6 +60,7 @@ export default (results, instructions, instrumentName) => {
 
     const resultPanelName = 'resultPanel';
     const instructionsPanelName = 'instructionsPanel';
+    const positionValuesPanelName = 'positionValuesPanel';
 
     return {
         panel: new Map([
@@ -62,14 +74,26 @@ export default (results, instructions, instrumentName) => {
                 instructionsPanelName, {
                     height: 0,
                 },
+            ],
+            [
+                positionValuesPanelName, {
+                    height: 0.2,
+                },
             ]]),
         series: [
-            // Positions
+            // Position size
             {
                 type: 'column',
-                data: positionData,
+                data: positionSizes,
                 yAxis: resultPanelName,
                 name: 'Positions',
+            },
+            // Position values
+            {
+                type: 'area',
+                data: positionValues,
+                yAxis: positionValuesPanelName,
+                name: 'Position Values',
             },
             // Orders
             {

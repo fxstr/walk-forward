@@ -28,15 +28,23 @@ test('creates expected output', (t) => {
     const createEntry = (day, value) => [new Date(2019, 0, day, 0, 0, 0).getTime(), value];
     const instructionsPanel = 'instructionsPanel';
     const resultPanel = 'resultPanel';
+    const positionValuesPanel = 'positionValuesPanel';
 
     t.deepEqual(result, {
         series: [
-            // Positions
+            // Position Sizes
             {
                 data: [createEntry(1, 5)],
                 yAxis: resultPanel,
                 type: 'column',
                 name: 'Positions',
+            },
+            // Position Values
+            {
+                data: [createEntry(1, 3.5)],
+                yAxis: positionValuesPanel,
+                type: 'area',
+                name: 'Position Values',
             },
             // Orders
             {
@@ -95,8 +103,9 @@ test('creates expected output', (t) => {
             },
         ],
         panel: new Map([
-            ['resultPanel', { height: 0.2 }],
-            ['instructionsPanel', { height: 0 }],
+            [resultPanel, { height: 0.2 }],
+            [instructionsPanel, { height: 0 }],
+            [positionValuesPanel, { height: 0.2 }],
         ]),
     });
 });
