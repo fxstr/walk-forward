@@ -24,10 +24,21 @@ test('fails with invalid data', async(t) => {
     try {
         await executeTalibIndicator(talibOptions);
         t.fail();
-    } catch (err) {
+    }
+    catch (err) {
         t.is(err.message.includes('inReal'), true);
     }
 
+});
+
+test('fills up every value if none is returned', async(t) => {
+    // SMA(100) on a data set of 10 will not return begIndex, we must fill data up ourselves
+    const { talibOptions } = setupData();
+    talibOptions.optInTimePeriod = 10;
+    const result = await executeTalibIndicator(talibOptions);
+    t.deepEqual(result, {
+        outReal: Array.from({ length: talibOptions.inReal.length }, () => undefined),
+    });
 });
 
 test('executes talib', async(t) => {
