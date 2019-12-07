@@ -3,6 +3,7 @@ import groupBy from '../dataHelpers/groupBy.mjs';
 import tradeForDate from './tradeForDate.mjs';
 import logger from '../logger/logger.mjs';
 import spinner from '../spinner/spinner.mjs';
+import transformRebalances from './transformRebalances.mjs';
 
 const { debug } = logger('WalkForward:trade');
 
@@ -24,15 +25,18 @@ export default (data, capital) => {
         throw new Error(`trade: Pass parameter capital that is a number; you passed ${capital} instead.`);
     }
 
+
     const timeSeriesGroupedByDate = groupBy(
         data.timeSeries,
         item => item.get('date'),
     );
 
+
     const instructionsGroupedByDate = new Map(groupBy(
-        data.instructions,
+        transformRebalances(data.instructions),
         item => item.date,
     ));
+
 
     // Create positions/orders for every entry in timeSeries
     const tradeResult = timeSeriesGroupedByDate.reduce((

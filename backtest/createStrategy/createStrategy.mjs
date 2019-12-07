@@ -7,7 +7,7 @@ import configure from '../configure/configure.mjs';
 import trade from '../trade/trade.mjs';
 import select from '../instructions/select.mjs';
 import weight from '../instructions/weight.mjs';
-import rest from '../instructions/rest.mjs';
+import rebalance from '../instructions/rebalance.mjs';
 import doFunction from '../do/do.mjs';
 import truncate from '../truncate/truncate.mjs';
 
@@ -30,7 +30,7 @@ const createStrategy = (stack = []) => {
         ['trade', trade],
         ['select', select],
         ['weight', weight],
-        ['rest', rest],
+        ['rebalance', rebalance],
         ['truncate', truncate],
         ['do', doFunction],
     ];

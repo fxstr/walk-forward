@@ -13,7 +13,7 @@ test('provides all methods', (t) => {
         'trade',
         'select',
         'weight',
-        'rest',
+        'rebalance',
         'truncate',
         'do',
     ];

@@ -18,10 +18,9 @@ export default (
     maxRatioPerInstrument = 1,
 ) => {
 
-    // Ignore instructions that are not traded on the current date. If traded is false, we should
-    // not do anything at all with that instrument.
-    const validInstructions = instructions
-        .filter(instruction => instruction.trade !== false);
+    // Ignore instructions that are not traded on the current date (because they are not being
+    // rebalanced, see transformRebalances)
+    const validInstructions = instructions.filter(({ trade }) => trade !== false);
 
     // Get sum of all weights
     const totalWeight = validInstructions.reduce((sum, { weight }) => sum + weight, 0);

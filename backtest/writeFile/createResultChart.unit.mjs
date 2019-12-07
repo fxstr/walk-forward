@@ -11,7 +11,7 @@ test('creates expected output', (t) => {
     const aaplInstructions = data.instructions.filter(({ instrument }) => instrument === 'aapl');
     aaplInstructions[0].selected = -1;
     aaplInstructions[0].weight = 2.5;
-    aaplInstructions[0].trade = false;
+    aaplInstructions[0].rebalance = false;
     data.result = [{
         positionValues: new Map([['aapl', 3.5]]),
         orders: new Map([['aapl', -3]]),
@@ -41,10 +41,11 @@ test('creates expected output', (t) => {
             },
             // Position Values
             {
-                data: [createEntry(1, 3.5)],
+                // First relative position value is always 1
+                data: [createEntry(1, 1)],
                 yAxis: positionValuesPanel,
-                type: 'area',
-                name: 'Position Values',
+                type: 'column',
+                name: 'Relative Position Value',
             },
             // Orders
             {
@@ -88,7 +89,7 @@ test('creates expected output', (t) => {
                 type: 'line',
                 name: 'Weight',
             },
-            // Trade
+            // Rebalance
             {
                 data: [
                     createEntry(1, 0),
@@ -99,7 +100,7 @@ test('creates expected output', (t) => {
                 ],
                 yAxis: instructionsPanel,
                 type: 'line',
-                name: 'Trade',
+                name: 'Rebalance',
             },
         ],
         panel: new Map([

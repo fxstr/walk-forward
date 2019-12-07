@@ -133,6 +133,7 @@ test('creates result panel if available', (t) => {
     data.result = [{
         positions: [],
         orders: new Map(),
+        positionValues: new Map(),
     }];
     const result = convertInstrumentToHighstock('aapl')(data);
     // Only test basically; detailed tests are in createResultChart.

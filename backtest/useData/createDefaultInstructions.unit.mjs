@@ -8,6 +8,6 @@ test('creates correct instructions', (t) => {
         instrument: 'testInstrument',
         selected: 0,
         weight: 1,
-        trade: true,
+        rebalance: true,
     });
 });

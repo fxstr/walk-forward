@@ -115,6 +115,7 @@ async function executeTest() {
             // Don't select if previous bar is not available or previous bar does not (yet) have
             // data for linearRegressionSlow
             if (instrument.length < 2 || !instrument[1].get('linearRegressionSlow')) return 0;
+            // Go long when linearregressionSlow grows
             return instrument[0].get('linearRegressionSlow') >
                 instrument[1].get('linearRegressionSlow') ? 1 : 0;
         })
@@ -123,7 +124,8 @@ async function executeTest() {
         .weight(instrument => instrument[0].get('slowK') || 1)
 
         // Only trade on even days (i.e. rest on every uneven day)
-        .rest(instrument => new Date(instrument[0].get('date')).getDate() % 2 === 1)
+        .rebalance(instrument => new Date(instrument[0].get('date')).getDate() % 2 !== 1)
+        // .rebalance(() => false)
 
         .trade(10 ** 5)
 

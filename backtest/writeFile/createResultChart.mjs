@@ -1,5 +1,3 @@
-import calculatePositionValue from '../trade/calculatePositionValue.mjs';
-
 /**
  * Exports Highstock panel and series for results (positions, orders) and instructions (weight,
  * selected, trade).
@@ -36,12 +34,28 @@ export default (results, instructions, instrumentName) => {
         ]);
 
 
+    // Get relative position values; base is the *close* price of the first bar the position was
+    // created (1.0). Subsequent *close* prices (see tradeForDate) set in relation to it.
     const positionValues = results
-        .filter(({ positions }) => positions
-            .find(position => position.instrument === instrumentName))
+        .reduce((previous, result) => {
+            const latest = previous.slice(-1).pop() || {};
+            const currentValue = result.positionValues.get(instrumentName);
+            let relativeValue = 0;
+            // Start with relativeValue 1 if we just opened the position
+            if (!latest.relativeValue && currentValue) relativeValue = 1;
+            // Use relative value if position was already open
+            if (latest.absoluteValue && currentValue) {
+                relativeValue = latest.relativeValue * (currentValue / latest.absoluteValue);
+            }
+            return [...previous, {
+                date: result.date,
+                relativeValue,
+                absoluteValue: currentValue,
+            }];
+        }, [])
         .map(result => [
             result.date,
-            result.positionValues.get(instrumentName) || 0,
+            result.relativeValue,
         ]);
 
 
@@ -53,9 +67,9 @@ export default (results, instructions, instrumentName) => {
         instruction.date,
         instruction.selected,
     ]);
-    const tradeData = instructionDataForInstrument.map(instruction => [
+    const rebalanceData = instructionDataForInstrument.map(instruction => [
         instruction.date,
-        instruction.trade ? 1 : 0,
+        instruction.rebalance ? 1 : 0,
     ]);
 
     const resultPanelName = 'resultPanel';
@@ -90,10 +104,11 @@ export default (results, instructions, instrumentName) => {
             },
             // Position values
             {
-                type: 'area',
+                type: 'column',
+                // step: true,
                 data: positionValues,
                 yAxis: positionValuesPanelName,
-                name: 'Position Values',
+                name: 'Relative Position Value',
             },
             // Orders
             {
@@ -127,11 +142,11 @@ export default (results, instructions, instrumentName) => {
                 name: 'Weight',
                 type: 'line',
             },
-            // Trade
+            // Rebalance
             {
-                data: tradeData,
+                data: rebalanceData,
                 yAxis: instructionsPanelName,
-                name: 'Trade',
+                name: 'Rebalance',
                 type: 'line',
             },
         ],

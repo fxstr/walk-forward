@@ -8,12 +8,14 @@ const createInstruction = (instrument, day, selected = 1, weight = 1) => ({
     date: new Date(2019, 0, day, 0, 0, 0).getTime(),
     weight,
     selected,
-    trade: true,
+    rebalance: true,
 });
+
 
 test('throws on invalid config', (t) => {
     t.throws(() => trade(undefined, false), /capital that is a number/);
 });
+
 
 test('converts data for trade as expected', (t) => {
     const { data } = createTestData();
@@ -144,6 +146,7 @@ test('converts data for trade as expected', (t) => {
 
 });
 
+
 test('does not modify original data', (t) => {
     const { data } = createTestData();
     data.instructions[0] = createInstruction('aapl', 1, -1, 2);
@@ -151,3 +154,21 @@ test('does not modify original data', (t) => {
     trade(data, 1000);
     t.deepEqual(clone, data);
 });
+
+
+test('respects rebalance instructions', (t) => {
+
+    const { data } = createTestData();
+    data.instructions[0] = createInstruction('aapl', 1, -1, 2);
+    // Create instruction on next day that has the same selected property, but set rebalance to
+    // false
+    data.instructions[1] = createInstruction('aapl', 1, -1, 4);
+    data.instructions[1].rebalance = false;
+
+    const { result } = trade(data, 1000);
+    // aapl positions are exactly the same on jan 1 as on jan 2
+    t.deepEqual(result[1].positions[0], result[2].positions[0]);
+
+});
+
+

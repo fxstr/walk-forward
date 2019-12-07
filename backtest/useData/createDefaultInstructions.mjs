@@ -17,6 +17,6 @@ export default function createDefaultInstructions(instrumentName, date) {
         // money will be allocated to all of them.
         weight: 1,
         // Should we trade on the current date?
-        trade: true,
+        rebalance: true,
     };
 }
