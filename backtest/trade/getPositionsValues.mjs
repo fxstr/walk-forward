@@ -8,7 +8,8 @@ import calculatePositionValue from './calculatePositionValue.mjs';
  *                                         for missing data on current bar)
  * @param  {Map.<string, number>} currentPrices    Current instrument prices; key is instrument
  *                                         name, value is price
- * @return {Map.<string, number>}          Current poisition values
+ * @return {Map.<string, number>}          Current poisition values; key is the instrument name,
+ *                                         value the current position value.
  */
 export default (positions, previousPositionValues, currentPrices) => (
     new Map(positions.map(position => (

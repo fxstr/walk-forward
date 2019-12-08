@@ -99,9 +99,9 @@ test('converts data for trade as expected', (t) => {
         positionValues: new Map([['aapl', 823.2], ['amzn', 25 * 22]]),
         // Had 221.6, bought 25 amzn@21.8 = 545
         cash: 221.6 - (25 * 21.8),
-        // aapl stays open, could not be bought
+        // aapl did not have any data available, is therefore removed
         // amzn is being closed, there are no instructions
-        orders: new Map([['aapl', 28], ['amzn', -25]]),
+        orders: new Map([['amzn', -25]]),
     });
 
     // Jan 4
@@ -110,20 +110,20 @@ test('converts data for trade as expected', (t) => {
     t.deepEqual(result[3], {
         date: jan4,
         positions: [
-            // aapl becomes -28
+            // aapl stays
             {
                 instrument: 'aapl',
-                size: -28,
-                // Position size was reduced, openDate and openPrice stay the same
+                size: -56,
                 openDate: jan2,
                 openPrice: 13.9,
             },
         ],
         // aapl shorted @13.9, now at 14.3 (loss 0.4/instrument), amzn 25@22.3 (evening)
-        positionValues: new Map([['aapl', 28 * (13.9 - 0.4)]]),
-        // Had -323.4, covered 28 aapl@14.1 (loss 0.2/instrument, bought @13.9), sold 25 amzn@21.6
-        cash: -323.4 + (28 * (13.9 - 0.2)) + (25 * 21.6),
-        orders: new Map([['aapl', 28]]),
+        positionValues: new Map([['aapl', 56 * (13.9 - 0.4)]]),
+        // Had -323.4, sold 25 amzn@21.6
+        cash: -323.4 + (25 * 21.6),
+        // Select 0 on aapl closes position
+        orders: new Map([['aapl', 56]]),
     });
 
     // Jan 5: No data
@@ -135,11 +135,10 @@ test('converts data for trade as expected', (t) => {
         date: jan6,
         // Positions are EMPTY
         positions: [],
-        // aapl shorted @13.9, now at 13.6 (loss 0.3/instrument), amzn 25@22.3 (from jan 4)
         positionValues: new Map(),
-        // 600.2 from previous + covered 28 aapl@13.4 (from 13.9, gain 0.5/instrument). JS gets
-        // strange numbers
-        cash: 1003.4000000000001,
+        // 216.6 from previous + covered 56 aapl@13.4 (from 13.9, gain 0.5/instrument); makes
+        // 56 * (13.9 + 0.5) = 806.4
+        cash: 1023,
         // Cover aapl
         orders: new Map(),
     });

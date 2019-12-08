@@ -3,7 +3,6 @@ import groupBy from '../dataHelpers/groupBy.mjs';
 import tradeForDate from './tradeForDate.mjs';
 import logger from '../logger/logger.mjs';
 import spinner from '../spinner/spinner.mjs';
-import transformRebalances from './transformRebalances.mjs';
 
 const { debug } = logger('WalkForward:trade');
 
@@ -33,9 +32,7 @@ export default (data, capital) => {
 
 
     const instructionsGroupedByDate = new Map(groupBy(
-        // Convert rebalance instruction to trade instruction on the following day. This keeps
-        // our code for trade.mjs clean and short.
-        transformRebalances(data.instructions),
+        data.instructions,
         item => item.date,
     ));
 

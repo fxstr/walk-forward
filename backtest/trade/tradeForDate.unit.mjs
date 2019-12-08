@@ -15,12 +15,12 @@ test('trades as expected', (t) => {
             instrument: 'aapl',
             weight: 2,
             selected: -1,
-            trade: true,
+            rebalance: true,
         }, {
             instrument: 'amzn',
             weight: 3,
             selected: 1,
-            trade: true,
+            rebalance: true,
         }],
         // Config
         {
@@ -86,3 +86,108 @@ test('trades as expected', (t) => {
     });
 
 });
+
+
+test('calculates amount available based on traded (and not all) instruments', (t) => {
+    const result = tradeForDate(
+        // Date
+        123,
+        // Open prices
+        new Map([['aapl', 12.5], ['amzn', 31.2]]),
+        // Close prices
+        new Map([['aapl', 15.8], ['amzn', 33.7]]),
+        // Instructions to create new orders from
+        [{
+            instrument: 'aapl',
+            weight: 2,
+            selected: -1,
+            rebalance: true,
+        }],
+        // Config
+        {
+            investedRatio: 1,
+            maxRatioPerInstrument: 1,
+        },
+        // Previous
+        {
+            // Previous positions
+            positions: [{
+                instrument: 'amzn',
+                size: 10,
+                openDate: 119,
+                openPrice: 9.2,
+            }, {
+                instrument: 'aapl',
+                size: 5,
+                openDate: 118,
+                openPrice: 12.2,
+            }],
+            // Previous positionValues (not relevant here)
+            positionValues: new Map(),
+            // Previous cash
+            cash: 100,
+            // Orders from previous bar
+            orders: new Map(),
+        },
+    );
+
+    t.deepEqual(
+        result.orders,
+        // Amount available for aapl order is
+        // 100 cash
+        // plus 15.8 * 5 (close for current position) = 79
+        // total = 179
+        // This is the smallest number amongst (0.9 * totalValue) or (0.8 * totalValue per
+        // instrument), therefore we should use it.
+        // 179 / 15.8 = 11.33 => -11
+        // Current position is 5, order must therefore be -16
+        new Map([['aapl', -16]]),
+    );
+
+});
+
+
+test('ignores rebalances if set to false', (t) => {
+    const result = tradeForDate(
+        // Date
+        123,
+        // Open prices
+        new Map([['aapl', 12.5]]),
+        // Close prices
+        new Map([['aapl', 15.8]]),
+        // Instructions to create new orders from
+        [{
+            instrument: 'aapl',
+            weight: 2,
+            selected: -1,
+            rebalance: false,
+        }],
+        // Config
+        {
+            investedRatio: 0.9,
+            maxRatioPerInstrument: 0.5,
+        },
+        // Previous
+        {
+            // Previous positions
+            positions: [{
+                size: -20,
+                instrument: 'aapl',
+                openDate: 119,
+                openPrice: 9.2,
+            }],
+            // Previous positionValues (not relevant here)
+            positionValues: new Map(),
+            // Previous cash
+            cash: 100,
+            // Orders from previous bar
+            orders: new Map(),
+        },
+    );
+
+    t.deepEqual(result.orders, new Map());
+
+});
+
+
+

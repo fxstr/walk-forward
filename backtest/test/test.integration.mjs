@@ -108,7 +108,7 @@ async function executeTest() {
 
         .configure({
             investedRatio: 0.9,
-            maxRatioPerInstrument: 0.5,
+            maxRatioPerInstrument: 0.6,
         })
 
         .select((instrument) => {
@@ -123,8 +123,8 @@ async function executeTest() {
         // Weight by slowK (does not really make sense, but … anyhow)
         .weight(instrument => instrument[0].get('slowK') || 1)
 
-        // Only trade on even days (i.e. rest on every uneven day)
-        .rebalance(instrument => new Date(instrument[0].get('date')).getDate() % 2 !== 1)
+        // Only rebalance on mondays
+        .rebalance(instrument => new Date(instrument[0].get('date')).getDay() === 1)
         // .rebalance(() => false)
 
         .trade(10 ** 5)
