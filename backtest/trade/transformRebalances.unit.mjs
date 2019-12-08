@@ -1,5 +1,6 @@
 import test from 'ava';
 import transformRebalances from './transformRebalances.mjs';
+import walkStructure from '../dataHelpers/walkStructure.mjs';
 
 const createInstruction = (rebalance, selected) => ({
     rebalance,
@@ -29,4 +30,11 @@ test('updates values', (t) => {
 test('does not trade if first selected is 0', (t) => {
     const instructions = [createInstruction(false, 0)];
     t.deepEqual(transformRebalances(instructions).map(({ trade }) => trade), [false]);
+});
+
+test('does not modify original data', (t) => {
+    const instructions = [createInstruction(false, 0), createInstruction(true, 1)];
+    const clone = walkStructure(instructions);
+    transformRebalances(instructions);
+    t.deepEqual(clone, instructions);
 });

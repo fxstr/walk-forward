@@ -13,6 +13,7 @@
 export default (
     instructions,
     prices,
+    currentPositions,
     accountValue,
     investedRatio = 1,
     maxRatioPerInstrument = 1,
@@ -45,7 +46,14 @@ export default (
         .map(([instrument, amount, instruction]) => [
             instrument,
             Math.floor(amount / prices.get(instrument)) * instruction.selected,
-        ]);
+        ])
+        // Convert absolute size to relative size (position to value)
+        .map(([instrument, positionSize]) => [
+            instrument,
+            positionSize - (currentPositions.get(instrument) || 0),
+        ])
+        // Filter out all orders with size 0; === also catches -0
+        .filter(([, orderSize]) => orderSize !== 0);
 
     return new Map(newPositions);
 

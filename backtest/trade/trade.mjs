@@ -33,6 +33,8 @@ export default (data, capital) => {
 
 
     const instructionsGroupedByDate = new Map(groupBy(
+        // Convert rebalance instruction to trade instruction on the following day. This keeps
+        // our code for trade.mjs clean and short.
         transformRebalances(data.instructions),
         item => item.date,
     ));

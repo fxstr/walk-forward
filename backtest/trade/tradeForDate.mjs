@@ -55,11 +55,16 @@ export default (
         .from(positionValues.values())
         .reduce((prev, value) => prev + value, 0);
 
+    // Map.<string, number> where key is the instrument name and value the current position size
+    const currentPositions = new Map(positions.map(position =>
+        [position.instrument, position.size]));
+
     // Create expected positions for next bar. Sizes are absolute (-28 means that we should be
     // 28 total short, not add another short position of 28).
-    const newPositions = createOrders(
+    const newOrders = createOrders(
         instructionSet,
         closePrices,
+        currentPositions,
         cash + allPositionsValue,
         investedRatio,
         maxRatioPerInstrument,
@@ -68,7 +73,7 @@ export default (
 
     // To create orders, sizes must be relative; calculate size from difference between previous
     // and new positions.
-    const newOrders = new Map(Array
+    /* const newOrders = new Map(Array
         .from(newPositions.entries())
         .map(([instrument, size]) => [
             instrument,
@@ -77,7 +82,7 @@ export default (
                 existingPosition.instrument === instrument) || {}).size || 0),
         ])
         // Remove orders witz size 0, there is nothing to execute
-        .filter(([, size]) => size !== 0));
+        .filter(([, size]) => size !== 0)); */
 
 
     // Orders should be valid until they are fulfilled (GTC). Therefore merge old unfulfilled
