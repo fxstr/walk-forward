@@ -47,18 +47,23 @@ export default (results, instructions, instrumentName) => {
                 .find(position => position.instrument === instrumentName);
             const currentPositionSize = (currentPosition && currentPosition.size) || 0;
             const positionValueAdjustedForSize = currentValue / currentPositionSize;
-            let relativeValue = 0;
-            // Start with relativeValue 1 if we just opened the position
-            if (!latest.relativeValue && positionValueAdjustedForSize) relativeValue = 1;
+            let relativeValue;
+            if (currentPositionSize === 0) {
+                relativeValue = 0;
+            }
+            // Start with relativeValue 1 if we just opened the position in the current direction
+            else if (Math.sign(latest.adjustedAbsoluteValue) !== Math.sign(positionValueAdjustedForSize)) {
+                relativeValue = 1;
+            }
             // Use relative value if position was already open
-            if (latest.absoluteValue && positionValueAdjustedForSize) {
+            else {
                 relativeValue = latest.relativeValue *
-                    (positionValueAdjustedForSize / latest.absoluteValue);
+                    (positionValueAdjustedForSize / latest.adjustedAbsoluteValue);
             }
             return [...previous, {
                 date: result.date,
                 relativeValue,
-                absoluteValue: positionValueAdjustedForSize,
+                adjustedAbsoluteValue: positionValueAdjustedForSize,
             }];
         }, [])
         .map(result => [
