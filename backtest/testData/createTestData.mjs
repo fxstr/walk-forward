@@ -1,4 +1,4 @@
-import createDefaultConfiguration from '../useData/createDefaultConfiguration.mjs';
+import createDefaultConfiguration from '../configure/createDefaultConfiguration.mjs';
 import createDefaultInstructions from '../useData/createDefaultInstructions.mjs';
 
 /**

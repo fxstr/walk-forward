@@ -1,7 +1,7 @@
 import { performance } from 'perf_hooks';
 import createDefaultInstructions from './createDefaultInstructions.mjs';
 import logger from '../logger/logger.mjs';
-import createDefaultConfiguration from './createDefaultConfiguration.mjs';
+import createDefaultConfiguration from '../configure/createDefaultConfiguration.mjs';
 import spinner from '../spinner/spinner.mjs';
 import sortBy from '../dataHelpers/sortBy.mjs';
 
