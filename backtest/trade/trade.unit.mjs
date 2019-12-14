@@ -218,7 +218,7 @@ test('uses instructionField', (t) => {
     const { result } = trade(data, 1000);
 
     const jan2 = new Date(2019, 0, 2, 0, 0, 0).getTime();
-    // Evening of Jan 1: 1000 / 0.2 = 5000
+    // Evening of Jan 1: 1000 / 0.2 (atr) = 5000
     // Short 5000 aapl@13.9 in the morning
     t.deepEqual(result[1].positions, [{
         instrument: 'aapl',
@@ -234,4 +234,35 @@ test('uses instructionField', (t) => {
     t.deepEqual(result[1].positionValues, new Map([['aapl', 4000 + 69500]]));
 
 });
+
+
+
+test('uses getPointValue', (t) => {
+    const { data } = createTestData();
+    const jan2 = new Date(2019, 0, 2, 0, 0, 0).getTime();
+
+    // Add field atr on aapl jan 2
+    data.instructions[0] = createInstruction('aapl', 1, -1, 2);
+    data.configuration.getPointValue = () => 4;
+
+    const { result } = trade(data, 1000);
+
+    // Evening of Jan 1: 1000 / (14.1 * 4)
+    // Short 17 aapl@13.9 in the morning
+    t.deepEqual(result[1].positions, [{
+        instrument: 'aapl',
+        size: -17,
+        openDate: jan2,
+        openPrice: 13.9 * 4,
+        marginPrice: 13.9 * 4,
+    }]);
+    // Shorted 17 @ 13.9 * 4
+    t.is(result[1].cash, 1000 - (17 * 13.9 * 4));
+    // Shorted 17 @ 13.9 * 4, is @13.1 * 4, gain 3.2/instrument = 54.4
+    // Price paid was 17 * 13.9 * 4 = 945.2
+    // JS numbers …
+    t.deepEqual(result[1].positionValues, new Map([['aapl', 999.6000000000001]]));
+
+});
+
 

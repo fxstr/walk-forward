@@ -96,3 +96,18 @@ test('works with weight 0 (does not divide by 0)', (t) => {
         new Map([['test', -0]]),
     );
 });
+
+
+test('works with pointValues', (t) => {
+    t.deepEqual(
+        createExpectedPositions(
+            [createInstruction(true, -1, 'test')],
+            new Map([['test', 2]]),
+            1000,
+            1000,
+            new Map([['test', 40]]),
+        ),
+        // 1000 total, 1 test costs 40 * 2 = 80, makes 12.5
+        new Map([['test', -12]]),
+    );
+});

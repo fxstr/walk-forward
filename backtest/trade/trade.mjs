@@ -77,10 +77,12 @@ export default (data, capital) => {
             instructionFieldPrices,
             instructionSet,
             // Configuration
+            // Map properties to make sure it will also work when we change the naming
             {
                 investedRatio: data.configuration.investedRatio,
                 maxRatioPerInstrument: data.configuration.maxRatioPerInstrument,
                 getPointValue: data.configuration.getPointValue,
+                getExchangeRate: data.configuration.getExchangeRate,
             },
             relativeMargins,
             // Previous data

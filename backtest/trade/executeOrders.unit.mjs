@@ -1,6 +1,7 @@
 import test from 'ava';
 import executeOrders from './executeOrders.mjs';
 
+
 test('works with no data', (t) => {
     const result = executeOrders(
         new Map(),
@@ -14,11 +15,16 @@ test('works with no data', (t) => {
     });
 });
 
-test('creates positions', (t) => {
+
+test('creates (multiple) positions', (t) => {
     const result = executeOrders(
-        new Map([['test', 2]]),
-        new Map([['test', 3]]),
+        // Orders
+        new Map([['test', 2], ['test2', -1]]),
+        // Open prices
+        new Map([['test', 3], ['test2', 2]]),
+        // Current orders
         [],
+        // Date
         123,
     );
     t.deepEqual(result, {
@@ -28,10 +34,17 @@ test('creates positions', (t) => {
             openDate: 123,
             openPrice: 3,
             marginPrice: 3,
+        }, {
+            size: -1,
+            instrument: 'test2',
+            openDate: 123,
+            openPrice: 2,
+            marginPrice: 2,
         }],
-        cost: 6,
+        cost: 8,
     });
 });
+
 
 test('does not return closed positions', (t) => {
     const result = executeOrders(
@@ -50,8 +63,8 @@ test('does not return closed positions', (t) => {
         // Money is freed, cost is therefore negative
         cost: -6,
     });
-
 });
+
 
 test('updates positions', (t) => {
     const result = executeOrders(
@@ -79,10 +92,14 @@ test('updates positions', (t) => {
     });
 });
 
+
 test('works with negative sizes', (t) => {
     const result = executeOrders(
+        // Orders
         new Map([['test', -1]]),
+        // Open prices
         new Map([['test', 4]]),
+        // Position
         [{
             size: -3,
             instrument: 'test',
@@ -90,6 +107,7 @@ test('works with negative sizes', (t) => {
             openDate: 120,
             marginPrice: 3,
         }],
+        // Date
         123,
     );
     t.deepEqual(result, {
@@ -104,10 +122,14 @@ test('works with negative sizes', (t) => {
     });
 });
 
+
 test('respects margin', (t) => {
     const result = executeOrders(
+        // Orders
         new Map([['test', -1]]),
+        // Open prices
         new Map([['test', 4]]),
+        // Position
         [{
             size: -3,
             instrument: 'test',
@@ -115,7 +137,9 @@ test('respects margin', (t) => {
             openDate: 120,
             marginPrice: 2,
         }],
+        // Date
         123,
+        // Margin
         new Map([['test', 0.55]]),
     );
     t.deepEqual(result, {
@@ -129,6 +153,35 @@ test('respects margin', (t) => {
         }],
         // Shorted 1 @ 0.55 * 4 (JS and numbers …)
         cost: 2.1999999999999993,
+    });
+
+});
+
+
+test('respects pointValue', (t) => {
+    const result = executeOrders(
+        // Orders
+        new Map([['test', -2]]),
+        // Open prices
+        new Map([['test', 4]]),
+        // Existing positions
+        [],
+        // Date
+        123,
+        // Margin
+        undefined,
+        // pointValue
+        new Map([['test', 40]]),
+    );
+    t.deepEqual(result, {
+        positions: [{
+            size: -2,
+            instrument: 'test',
+            openDate: 123,
+            openPrice: 160,
+            marginPrice: 160,
+        }],
+        cost: 320,
     });
 
 });

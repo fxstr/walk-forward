@@ -28,6 +28,7 @@ test('trades as expected', (t) => {
         {
             investedRatio: 0.9,
             maxRatioPerInstrument: 0.5,
+            getPointValue: () => 1,
         },
         // Margins (default to 1)
         new Map(),
@@ -117,6 +118,7 @@ test('calculates amount available based on traded (and not all) instruments', (t
         {
             investedRatio: 1,
             maxRatioPerInstrument: 1,
+            getPointValue: () => 1,
         },
         // Margins
         [],
@@ -182,6 +184,7 @@ test('ignores rebalances if set to false', (t) => {
         {
             investedRatio: 0.9,
             maxRatioPerInstrument: 0.5,
+            getPointValue: () => 1,
         },
         // Margins
         [],
@@ -231,6 +234,7 @@ test('creates orders depending on instructionField prices', (t) => {
         {
             investedRatio: 1,
             maxRatioPerInstrument: 1,
+            getPointValue: () => 1,
         },
         // Margins
         [],
@@ -252,5 +256,53 @@ test('creates orders depending on instructionField prices', (t) => {
 
 });
 
+
+
+test('uses pointValue if provided', (t) => {
+    const result = tradeForDate(
+        // Date
+        123,
+        // Open prices
+        new Map([['aapl', 12.5]]),
+        // Close prices
+        new Map([['aapl', 15.8]]),
+        // instructionField prices
+        new Map([['aapl', 15.8]]),
+        // Instructions to create new orders from
+        [{
+            instrument: 'aapl',
+            weight: 2,
+            selected: -1,
+        }],
+        // Config
+        {
+            investedRatio: 1,
+            maxRatioPerInstrument: 1,
+            // Check arguments
+            getPointValue: (instrument, date) => {
+                t.is(instrument, 'aapl');
+                t.is(date, 123);
+                return 40;
+            },
+        },
+        // Margins
+        [],
+        // Previous
+        {
+            // Previous positions
+            positions: [],
+            // Previous positionValues (not relevant here)
+            positionValues: new Map(),
+            // Previous cash
+            cash: 10000,
+            // Orders from previous bar
+            orders: new Map(),
+        },
+    );
+
+    // Cash 10000, prices is 15.8 * 40 = 632
+    t.deepEqual(result.orders, new Map([['aapl', -15]]));
+
+});
 
 

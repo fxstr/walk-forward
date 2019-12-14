@@ -8,14 +8,17 @@
  *                                          the smaller of (all money available * invested ratio)
  *                                          or (amount available for trading)
  * @param {Number} maxAmountPerInstrument   Max amount that we can invest for a single instrument
+ * @param {Map.<string, number} pointValues Current values in base currency if instrument changes
+ *                                          by one point (includes contract size, exchange rate)
  * @return {Map.<string, number>}           Expected positions; key is the instrument's name, value
  *                                          the expected position size
  */
 export default (
     instructions,
-    prices,
+    instructionFieldPrices,
     maxAmount,
     maxAmountPerInstrument,
+    pointValues = new Map(),
 ) => {
 
     // Get sum of all weights
@@ -36,7 +39,8 @@ export default (
         // Calculate sizes by creating an array with [instrumentName, size]
         .map(([instrument, amount, instruction]) => [
             instrument,
-            Math.floor(amount / prices.get(instrument)) * instruction.selected,
+            Math.floor(amount / (instructionFieldPrices.get(instrument) *
+                (pointValues.get(instrument) || 1))) * instruction.selected,
         ]);
 
     return new Map(newPositions);

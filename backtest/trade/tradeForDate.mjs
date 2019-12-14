@@ -38,10 +38,25 @@ export default (
     closePrices,
     instructionFieldPrices,
     instructionSet,
-    { investedRatio, maxRatioPerInstrument },
+    {
+        investedRatio,
+        maxRatioPerInstrument,
+        getPointValue,
+    },
     relativeMargins,
     previous,
 ) => {
+
+    // Set with all instrument names that are relevant for the current date (either have an
+    // instruction or a position or a price)
+    const allInstruments = new Set(
+        openPrices.keys(),
+        instructionSet.map(({ instrument }) => instrument),
+        previous.positions.map(({ instrument }) => instrument),
+    );
+    // Map.<string, number> with point value for every relevant instrument on current datef
+    const pointValues = new Map(Array.from(allInstruments)
+        .map(instrument => [instrument, getPointValue(instrument, date)]));
 
     // Execute orders (in the morning, when only open prices are known)
     const { positions, cost } = executeOrders(
@@ -52,7 +67,9 @@ export default (
         previous.positions,
         date,
         relativeMargins,
+        pointValues,
     );
+
     const cash = previous.cash - cost;
 
     // Get values of all positions (in the evening when close prices are known); value is needed
@@ -61,6 +78,7 @@ export default (
         positions,
         previous.positionValues,
         closePrices,
+        pointValues,
     );
 
     const allPositionsValue = Array
@@ -95,6 +113,7 @@ export default (
         instructionFieldPrices,
         maxAmount,
         maxAmountPerInstrument,
+        pointValues,
     );
 
 
