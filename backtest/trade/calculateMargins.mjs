@@ -10,19 +10,15 @@
  */
 export default (timeSeries, instrumentKey, getMargin) => (
 
-    timeSeries.map((entry) => {
+    new Map(timeSeries.map((entry) => {
 
         const margin = getMargin(entry.get(instrumentKey), entry);
         if (typeof margin !== 'number') {
             throw new Error(`createMargins: margin returned by getMargin function is not a number but ${JSON.stringify(margin)}.`);
         }
 
-        return {
-            margin,
-            date: entry.get('date'),
-            instrument: entry.get(instrumentKey),
-        };
+        return [entry.get(instrumentKey), margin];
 
-    })
+    }))
 
 );

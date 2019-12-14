@@ -51,11 +51,11 @@ test('is called with expected arguments', (t) => {
 test('returns expected result', (t) => {
     const { timeSeries, instrumentKey, getMargin } = setupData();
     const result = calculateMargins(timeSeries, instrumentKey, getMargin);
-    t.deepEqual(result, [
-        { instrument: 'inst1', date: 123, margin: 0.31 },
-        { instrument: 'inst2', date: 124, margin: 0.27 },
-        { instrument: 'inst1', date: 124, margin: 0.32 },
-    ]);
+    t.deepEqual(result, new Map([
+        ['inst1', 0.31],
+        ['inst2', 0.27],
+        ['inst1', 0.32],
+    ]));
 
 });
 

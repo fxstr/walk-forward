@@ -39,13 +39,6 @@ export default (data, capital) => {
     ));
 
 
-    // Object.<string, number>[]: Margins for every entry in timeSeries
-    const relativeMarginsGroupedByDate = new Map(groupBy(
-        createMargins(data.timeSeries, data.instrumentKey, data.configuration.getMargin),
-        ({ date }) => date,
-    ));
-
-
     // Create positions/orders for every entry in timeSeries
     const tradeResult = timeSeriesGroupedByDate.reduce((
         previous,
@@ -56,10 +49,11 @@ export default (data, capital) => {
         // Get instructions for current date
         const instructionSet = instructionsGroupedByDate.get(date);
         // Get current margins, transform to Map.<string, number>
-        const currentRelativeMargins = new Map(groupBy(
-            relativeMarginsGroupedByDate.get(date),
-            ({ instrument }) => instrument,
-        ).map(([instrumentName, marginData]) => [instrumentName, marginData[0].margin]));
+        const relativeMargins = createMargins(
+            timeSeriesEntries,
+            data.instrumentKey,
+            data.configuration.getMargin,
+        );
 
         // Creates a Map.<string, number> from timeSeries where key is the instrument name and
         // value is the price type (e.g. 'open')
@@ -88,7 +82,7 @@ export default (data, capital) => {
                 maxRatioPerInstrument: data.configuration.maxRatioPerInstrument,
                 getPointValue: data.configuration.getPointValue,
             },
-            currentRelativeMargins,
+            relativeMargins,
             // Previous data
             {
                 orders: previousEntry.orders,
