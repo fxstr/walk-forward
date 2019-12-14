@@ -7,4 +7,5 @@ test('returns config', (t) => {
     t.is(config.maxRatioPerInstrument, 1);
     t.is(config.getMargin(), 1);
     t.is(config.getPointValue(), 1);
+    t.is(config.instructionField, 'close');
 });

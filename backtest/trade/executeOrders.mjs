@@ -11,17 +11,25 @@ import calculatePositionsValues from './calculatePositionsValues.mjs';
  * @param  {Map} prices                   Data for a date:
  *                                        - key: instrument's name
  *                                        - value: instrument's open
- * @param  {Object[]} previousPositions   Previous positions, every object with
+ * @param  {object[]} previousPositions   Previous positions, every object with
  *                                        - instrument (name)
  *                                        - size
  *                                        - openDate
  *                                        - openPrice
- * @param {Number} date                   Current date
+ * @param {Map} relativeMargins           Relative margins for all current instruments. Defaults to
+ *                                        empty map which is replaced with 1.
+ * @param {} [varname] [description]
  * @return {Object}                       Object with
  *                                        - positions (new positions as array of objects, each with
  *                                          size, instrument, openDate, openPrice)
  */
-export default function executeOrders(orders, prices, previousPositions, date) {
+export default function executeOrders(
+    orders,
+    prices,
+    previousPositions,
+    date,
+    relativeMargins = new Map(),
+) {
 
     // Get all orders that have open data for today; if they don't, they cannot be executed and
     // will be returned as unfulfilled
@@ -37,6 +45,7 @@ export default function executeOrders(orders, prices, previousPositions, date) {
             size,
             prices.get(instrument),
             date,
+            (relativeMargins.get(instrument) || 1) * prices.get(instrument),
         ));
 
     // Concat old and new positions, group by instrument

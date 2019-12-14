@@ -6,10 +6,12 @@ test('returns correct result', (t) => {
         [{
             instrument: 'aapl',
             openPrice: 2,
+            marginPrice: 2,
             size: 5,
         }, {
             instrument: 'amzn',
             openPrice: 3,
+            marginPrice: 3,
             size: -4,
         }],
         new Map([

@@ -7,14 +7,13 @@
  * @param  {Number} currentDate
  * @return {Object}                  Position created
  */
-export default (instrument, size, currentPrice, currentDate) => ({
+export default (instrument, size, currentPrice, currentDate, marginPrice) => ({
     instrument,
     size,
+    // Open price is used to calculate gain/loss for position
     openPrice: currentPrice,
     openDate: currentDate,
-    // Store value on position; this allows us to e.g. get the value of all previous positions –
-    // even when there is no data available for the current date – and thereby calculate the cost
-    // of a transaction.
-    // value: currentPrice * size,
+    // Margin price is added to gain/loss to get position value
+    marginPrice,
 });
 

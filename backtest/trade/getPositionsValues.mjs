@@ -21,6 +21,7 @@ export default (positions, previousPositionValues, currentPrices) => (
                 calculatePositionValue(
                     position.size,
                     position.openPrice,
+                    position.marginPrice,
                     currentPrices.get(position.instrument),
                 ) :
                 // If there is no open data for the instrument on the current date, use previous

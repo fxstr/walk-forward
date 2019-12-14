@@ -1,8 +1,9 @@
 /**
  * Creates orders from instructions, e.g. converts (relative) weight into an (absolute) size.
  * @param {Object[]} instructions           See createDefaultInstructions.mjs
- * @param {Map.<string, number>} prices     Current (close) prices at the date when the orders
+ * @param {Map.<string, number>} prices     Current prices at the date when the orders
  *                                          are created. Key is instrument name, value is price.
+ *                                          Depends on configuration.instructionField.
  * @param {Number} maxAmount                Max amount that can be invested in total; should be
  *                                          the smaller of (all money available * invested ratio)
  *                                          or (amount available for trading)

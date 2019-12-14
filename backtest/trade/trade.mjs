@@ -39,8 +39,8 @@ export default (data, capital) => {
     ));
 
 
-    // Object.<string, *>[]: Margins for every entry in timeSeries.
-    const marginsGroupedByDate = new Map(groupBy(
+    // Object.<string, number>[]: Margins for every entry in timeSeries
+    const relativeMarginsGroupedByDate = new Map(groupBy(
         createMargins(data.timeSeries, data.instrumentKey, data.configuration.getMargin),
         ({ date }) => date,
     ));
@@ -55,7 +55,11 @@ export default (data, capital) => {
 
         // Get instructions for current date
         const instructionSet = instructionsGroupedByDate.get(date);
-        const currentMargins = marginsGroupedByDate.get(date);
+        // Get current margins, transform to Map.<string, number>
+        const currentRelativeMargins = new Map(groupBy(
+            relativeMarginsGroupedByDate.get(date),
+            ({ instrument }) => instrument,
+        ).map(([instrumentName, marginData]) => [instrumentName, marginData[0].margin]));
 
         // Creates a Map.<string, number> from timeSeries where key is the instrument name and
         // value is the price type (e.g. 'open')
@@ -65,6 +69,10 @@ export default (data, capital) => {
         // Map with key: instrumentName, value: opening/closing price
         const openPrices = getPriceType(timeSeriesEntries, 'open');
         const closePrices = getPriceType(timeSeriesEntries, 'close');
+        const instructionFieldPrices = getPriceType(
+            timeSeriesEntries,
+            data.configuration.instructionField,
+        );
 
         const previousEntry = previous.slice(-1).pop();
 
@@ -72,6 +80,7 @@ export default (data, capital) => {
             date,
             openPrices,
             closePrices,
+            instructionFieldPrices,
             instructionSet,
             // Configuration
             {
@@ -79,7 +88,7 @@ export default (data, capital) => {
                 maxRatioPerInstrument: data.configuration.maxRatioPerInstrument,
                 getPointValue: data.configuration.getPointValue,
             },
-            currentMargins,
+            currentRelativeMargins,
             // Previous data
             {
                 orders: previousEntry.orders,

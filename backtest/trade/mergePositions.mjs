@@ -19,21 +19,25 @@ export default (...positions) => positions.slice(1).reduce(
         // - If position is reduced, use combined price (default)
         // - If position is extended, use average weighted by size
         // - If position is created (from 0/opposite direction), use new price
-        let { openPrice } = combined;
+        let { openPrice, marginPrice } = combined;
         if (Math.sign(combined.size) === Math.sign(position.size)) {
-            openPrice = (
-                (combined.openPrice * Math.abs(combined.size)) +
-                (position.openPrice * Math.abs(position.size))
-            ) /
-            (Math.abs(combined.size) + Math.abs(position.size));
+            const combinedWeight = Math.abs(combined.size) /
+                (Math.abs(combined.size) + Math.abs(position.size));
+            openPrice = (combined.openPrice * combinedWeight) +
+                (position.openPrice * (1 - combinedWeight));
+            marginPrice = (combined.marginPrice * combinedWeight) +
+                (position.marginPrice * (1 - combinedWeight));
         }
-        else if (Math.sign(size) !== Math.sign(combined.size)) ({ openPrice } = position);
+        else if (Math.sign(size) !== Math.sign(combined.size)) {
+            ({ openPrice, marginPrice } = position);
+        }
 
         return {
             instrument: position.instrument,
             size,
             openPrice,
             openDate,
+            marginPrice,
         };
     },
     // Start with first position, merge all others into this one

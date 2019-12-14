@@ -6,7 +6,7 @@
  * @param  {Number} currentPrice
  * @return {Number}               Position's current value
  */
-export default (positionSize, openPrice, currentPrice) => (
-    Math.abs((positionSize * openPrice) +
-        ((currentPrice - openPrice) * positionSize * Math.sign(positionSize)))
+export default (positionSize, openPrice, marginPrice, currentPrice) => (
+    (Math.abs(positionSize) * marginPrice) +
+        ((currentPrice - openPrice) * positionSize)
 );

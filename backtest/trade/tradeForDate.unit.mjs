@@ -10,6 +10,8 @@ test('trades as expected', (t) => {
         new Map([['aapl', 12.5], ['amzn', 11.2]]),
         // Close prices
         new Map([['aapl', 15.8], ['amzn', 13.7]]),
+        // instructionField prices
+        new Map([['aapl', 15.8], ['amzn', 13.7]]),
         // Instructions to create new orders from
         [{
             instrument: 'aapl',
@@ -27,8 +29,8 @@ test('trades as expected', (t) => {
             investedRatio: 0.9,
             maxRatioPerInstrument: 0.5,
         },
-        // Margins
-        [],
+        // Margins (default to 1)
+        new Map(),
         // Previous
         {
             // Previous positions
@@ -37,11 +39,13 @@ test('trades as expected', (t) => {
                 size: 4,
                 openDate: 120,
                 openPrice: 12,
+                marginPrice: 12,
             }, {
                 instrument: 'amzn',
                 size: 10,
                 openDate: 119,
                 openPrice: 9.2,
+                marginPrice: 9.2,
             }],
             // Previous positionValues (not relevant here)
             positionValues: new Map(),
@@ -60,11 +64,13 @@ test('trades as expected', (t) => {
             openDate: 120,
             // Were 4@12, plus new 4@12.5 open = 12.25 (average)
             openPrice: 12.25,
+            marginPrice: 12.25,
         }, {
             instrument: 'amzn',
             size: -2,
             openDate: 123,
             openPrice: 11.2,
+            marginPrice: 11.2,
         }],
         // Values depend on closing prices
         // - aapl 8@15.8 = 126.4
@@ -98,6 +104,8 @@ test('calculates amount available based on traded (and not all) instruments', (t
         new Map([['aapl', 12.5], ['amzn', 31.2]]),
         // Close prices
         new Map([['aapl', 15.8], ['amzn', 33.7]]),
+        // instructionField prices
+        new Map([['aapl', 15.8], ['amzn', 33.7]]),
         // Instructions to create new orders from
         [{
             instrument: 'aapl',
@@ -120,11 +128,13 @@ test('calculates amount available based on traded (and not all) instruments', (t
                 size: 10,
                 openDate: 119,
                 openPrice: 9.2,
+                marginPrice: 9.2,
             }, {
                 instrument: 'aapl',
                 size: 5,
                 openDate: 118,
                 openPrice: 12.2,
+                marginPrice: 12.2,
             }],
             // Previous positionValues (not relevant here)
             positionValues: new Map(),
@@ -159,6 +169,8 @@ test('ignores rebalances if set to false', (t) => {
         new Map([['aapl', 12.5]]),
         // Close prices
         new Map([['aapl', 15.8]]),
+        // instructionField prices
+        new Map([['aapl', 15.8]]),
         // Instructions to create new orders from
         [{
             instrument: 'aapl',
@@ -175,12 +187,14 @@ test('ignores rebalances if set to false', (t) => {
         [],
         // Previous
         {
-            // Previous positions
+            // Previous positions (must exist; only if position exists *and* is part of new orders,
+            // it's a rebalance)
             positions: [{
                 size: -20,
                 instrument: 'aapl',
                 openDate: 119,
                 openPrice: 9.2,
+                marginPrice: 0.2,
             }],
             // Previous positionValues (not relevant here)
             positionValues: new Map(),
@@ -192,6 +206,49 @@ test('ignores rebalances if set to false', (t) => {
     );
 
     t.deepEqual(result.orders, new Map());
+
+});
+
+
+
+test('creates orders depending on instructionField prices', (t) => {
+    const result = tradeForDate(
+        // Date
+        123,
+        // Open prices
+        new Map([['aapl', 12.5]]),
+        // Close prices
+        new Map([['aapl', 15.8]]),
+        // instructionField prices
+        new Map([['aapl', 3]]),
+        // Instructions to create new orders from
+        [{
+            instrument: 'aapl',
+            weight: 2,
+            selected: -1,
+        }],
+        // Config
+        {
+            investedRatio: 1,
+            maxRatioPerInstrument: 1,
+        },
+        // Margins
+        [],
+        // Previous
+        {
+            // Previous positions
+            positions: [],
+            // Previous positionValues (not relevant here)
+            positionValues: new Map(),
+            // Previous cash
+            cash: 100,
+            // Orders from previous bar
+            orders: new Map(),
+        },
+    );
+
+    // 100, prices is 3; selected is -1 => -33
+    t.deepEqual(result.orders, new Map([['aapl', -33]]));
 
 });
 

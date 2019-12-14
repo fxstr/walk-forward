@@ -13,6 +13,7 @@ import filterRebalances from './filterRebalances.mjs';
  *                                                the open price at date
  * @param {Map.<string, number>} closePrices      Closing prices; key is the instrument's name,
  *                                                value the clsoing price at date
+ * @param {Map.<string, number>} instructionFieldPrices      Prices used to calculate order size
  * @param {Object.<string, number>[]} instructionSet  Instructions for the given date; key is the
  *                                                instruction's name, value the instruction's value,
  *                                                e.g. [{ select, -1, weight: 5 }]
@@ -25,6 +26,7 @@ import filterRebalances from './filterRebalances.mjs';
  *                                                and returns point value
  * @param {object[]} margins                      Margins for current date with one entry per
  *                                                instrument, each with instrument, date, margin
+ *                                                (relative number)
  * @param {object} previous                       Trading results from the previous date; see return
  *                                                comment
  * @return {object}                               Object with the trading results for the current
@@ -34,9 +36,10 @@ export default (
     date,
     openPrices,
     closePrices,
+    instructionFieldPrices,
     instructionSet,
-    { investedRatio, maxRatioPerInstrument, getPointValue },
-    margins,
+    { investedRatio, maxRatioPerInstrument },
+    relativeMargins,
     previous,
 ) => {
 
@@ -48,9 +51,9 @@ export default (
         // Pass in previous positions
         previous.positions,
         date,
+        relativeMargins,
     );
     const cash = previous.cash - cost;
-
 
     // Get values of all positions (in the evening when close prices are known); value is needed
     // to calculate orders for next day.
@@ -89,7 +92,7 @@ export default (
     // larger or smaller (and thereby freeing money).
     const expectedPositions = createExpectedPositions(
         validInstructions,
-        closePrices,
+        instructionFieldPrices,
         maxAmount,
         maxAmountPerInstrument,
     );

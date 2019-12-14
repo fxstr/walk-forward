@@ -12,6 +12,7 @@ export default (positions, currentPrices) => positions.reduce((prev, position) =
     prev + calculatePositionValue(
         position.size,
         position.openPrice,
+        position.marginPrice,
         currentPrices.get(position.instrument),
     )
 ), 0);

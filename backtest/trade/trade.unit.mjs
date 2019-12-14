@@ -12,7 +12,7 @@ const createInstruction = (instrument, day, selected = 1, weight = 1) => ({
 });
 
 
-test('throws on invalid config', (t) => {
+test('throws on invalid capital', (t) => {
     t.throws(() => trade(undefined, false), /capital that is a number/);
 });
 
@@ -60,6 +60,7 @@ test('converts data for trade as expected', (t) => {
             size: -56,
             openDate: jan2,
             openPrice: 13.9,
+            marginPrice: 13.9,
         }],
         // aapl opened@13.9, close@13.1, +0.8/instrument = 56 * (13.9 + 0.8) = 823.2
         positionValues: new Map([['aapl', 56 * (13.9 + 0.8)]]),
@@ -86,6 +87,7 @@ test('converts data for trade as expected', (t) => {
                 size: -56,
                 openDate: jan2,
                 openPrice: 13.9,
+                marginPrice: 13.9,
             },
             // Bought 25 amzn@21.8
             {
@@ -93,6 +95,7 @@ test('converts data for trade as expected', (t) => {
                 size: 25,
                 openDate: jan3,
                 openPrice: 21.8,
+                marginPrice: 21.8,
             },
         ],
         // Aapl unchanged, amzn 25@22 (evening)
@@ -116,6 +119,7 @@ test('converts data for trade as expected', (t) => {
                 size: -56,
                 openDate: jan2,
                 openPrice: 13.9,
+                marginPrice: 13.9,
             },
         ],
         // aapl shorted @13.9, now at 14.3 (loss 0.4/instrument), amzn 25@22.3 (evening)
@@ -170,4 +174,64 @@ test('respects rebalance instructions', (t) => {
 
 });
 
+
+test('works with margins', (t) => {
+    const { data } = createTestData();
+    const jan2 = new Date(2019, 0, 2, 0, 0, 0).getTime();
+
+    // Add field atr on aapl jan 2
+    data.timeSeries[1].set('atr', 0.6);
+    data.instructions[0] = createInstruction('aapl', 1, -1, 2);
+    data.configuration.getMargin = (instrumentName, entry) => {
+        // Check arguments
+        if (instrumentName === 'aapl' && entry.get('date') === jan2) return entry.get('atr');
+        return 1;
+    };
+
+    const { result } = trade(data, 1000);
+
+    // Evening of Jan 1: 1000 / 14.1 = 70.92
+    // Short 70 aapl@13.9 in the morning
+    t.deepEqual(result[1].positions, [{
+        instrument: 'aapl',
+        size: -70,
+        openDate: jan2,
+        openPrice: 13.9,
+        marginPrice: 13.9 * 0.6,
+    }]);
+    t.is(result[1].cash, 1000 - (70 * 13.9 * 0.6));
+    // Shorted 70 @ 13.9, is @13.1, gain 0.8/instrument = 56
+    // Price paid was 13.9 * 0.6 * 70 = 583.8
+    t.deepEqual(result[1].positionValues, new Map([['aapl', 56 + 583.8]]));
+
+});
+
+
+test('uses instructionField', (t) => {
+    const { data } = createTestData();
+
+    // Add field atr on aapl jan 2
+    data.instructions[0] = createInstruction('aapl', 1, -1, 2);
+    data.timeSeries[0].set('atr', 0.2);
+    data.configuration.instructionField = 'atr';
+
+    const { result } = trade(data, 1000);
+
+    const jan2 = new Date(2019, 0, 2, 0, 0, 0).getTime();
+    // Evening of Jan 1: 1000 / 0.2 = 5000
+    // Short 5000 aapl@13.9 in the morning
+    t.deepEqual(result[1].positions, [{
+        instrument: 'aapl',
+        size: -5000,
+        openDate: jan2,
+        openPrice: 13.9,
+        marginPrice: 13.9,
+    }]);
+    // Shorted 5000 @ 13.9
+    t.is(result[1].cash, 1000 - (5000 * 13.9));
+    // Shorted 5000 @ 13.9, is @13.1, gain 0.8/instrument = 4000
+    // Price paid was 13.9 * 5000 = 69500
+    t.deepEqual(result[1].positionValues, new Map([['aapl', 4000 + 69500]]));
+
+});
 

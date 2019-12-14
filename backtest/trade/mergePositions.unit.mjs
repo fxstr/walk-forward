@@ -1,11 +1,12 @@
 import test from 'ava';
 import mergePositions from './mergePositions.mjs';
 
-const createPosition = (size = 10, openPrice = 2, openDate = 123) => ({
+const createPosition = (size = 10, openPrice = 2, openDate = 123, marginPrice = openPrice) => ({
     size,
     openPrice,
     openDate,
     instrument: 'instr',
+    marginPrice,
 });
 
 test('throws if instruments differ', (t) => {
@@ -61,6 +62,13 @@ test('reduces to 0 in both directions', (t) => {
     t.deepEqual(
         mergePositions(createPosition(-10), createPosition(10)),
         createPosition(0, 2, 123),
+    );
+});
+
+test('works with margin different than openPrice', (t) => {
+    t.deepEqual(
+        mergePositions(createPosition(), createPosition(5, 2, 124, 1.1)),
+        createPosition(15, 2, 123, 1.7),
     );
 });
 
