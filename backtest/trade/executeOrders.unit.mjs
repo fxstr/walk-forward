@@ -10,21 +10,6 @@ test('works with no data', (t) => {
     );
     t.deepEqual(result, {
         positions: [],
-        unfulfilledOrders: new Map(),
-        cost: 0,
-    });
-});
-
-test('returns unfulfilled orders', (t) => {
-    const result = executeOrders(
-        new Map([['noData', 2]]),
-        new Map(),
-        [],
-        123,
-    );
-    t.deepEqual(result, {
-        positions: [],
-        unfulfilledOrders: new Map([['noData', 2]]),
         cost: 0,
     });
 });
@@ -43,7 +28,6 @@ test('creates positions', (t) => {
             openDate: 123,
             openPrice: 3,
         }],
-        unfulfilledOrders: new Map(),
         cost: 6,
     });
 });
@@ -61,7 +45,6 @@ test('does not return closed positions', (t) => {
     );
     t.deepEqual(result, {
         positions: [],
-        unfulfilledOrders: new Map(),
         // Money is freed, cost is therefore negative
         cost: -6,
     });
@@ -87,7 +70,6 @@ test('updates positions', (t) => {
             openDate: 120,
             openPrice: 3.5,
         }],
-        unfulfilledOrders: new Map(),
         cost: 8,
     });
 });
@@ -111,7 +93,6 @@ test('works with negative sizes', (t) => {
             openDate: 120,
             openPrice: 3.25,
         }],
-        unfulfilledOrders: new Map(),
         cost: 4,
     });
 });

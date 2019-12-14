@@ -20,20 +20,14 @@ import calculatePositionsValues from './calculatePositionsValues.mjs';
  * @return {Object}                       Object with
  *                                        - positions (new positions as array of objects, each with
  *                                          size, instrument, openDate, openPrice)
- *                                        - unfulfilledOrders (orders that could *not* be executed)
  */
 export default function executeOrders(orders, prices, previousPositions, date) {
 
-    // Filters orders and returns all orders that have open data available (if availavble is true)
-    // or not (if available is false)
-    const filterOrdersByPricesAvailable = isAvailable => new Map(Array
-        .from(orders.entries())
-        .filter(([instrument]) => (isAvailable ? prices.has(instrument) :
-            !prices.has(instrument))));
-
     // Get all orders that have open data for today; if they don't, they cannot be executed and
     // will be returned as unfulfilled
-    const ordersWithData = filterOrdersByPricesAvailable(true);
+    const ordersWithData = new Map(Array
+        .from(orders.entries())
+        .filter(([instrument]) => prices.has(instrument)));
 
     // Create a position for every order that has an open value for the current date
     const newPositions = Array
@@ -71,7 +65,6 @@ export default function executeOrders(orders, prices, previousPositions, date) {
 
     return {
         positions,
-        unfulfilledOrders: filterOrdersByPricesAvailable(false),
         cost,
     };
 

@@ -3,6 +3,7 @@ import groupBy from '../dataHelpers/groupBy.mjs';
 import tradeForDate from './tradeForDate.mjs';
 import logger from '../logger/logger.mjs';
 import spinner from '../spinner/spinner.mjs';
+import createMargins from './calculateMargins.mjs';
 
 const { debug } = logger('WalkForward:trade');
 
@@ -25,15 +26,23 @@ export default (data, capital) => {
     }
 
 
+    // Map.<number, Map[]>: timeSeries grouped by date
     const timeSeriesGroupedByDate = groupBy(
         data.timeSeries,
         item => item.get('date'),
     );
 
-
+    // Map.<number, object[]>: Instructions grouped by date
     const instructionsGroupedByDate = new Map(groupBy(
         data.instructions,
-        item => item.date,
+        ({ date }) => date,
+    ));
+
+
+    // Object.<string, *>[]: Margins for every entry in timeSeries.
+    const marginsGroupedByDate = new Map(groupBy(
+        createMargins(data.timeSeries, data.instrumentKey, data.configuration.getMargin),
+        ({ date }) => date,
     ));
 
 
@@ -46,6 +55,7 @@ export default (data, capital) => {
 
         // Get instructions for current date
         const instructionSet = instructionsGroupedByDate.get(date);
+        const currentMargins = marginsGroupedByDate.get(date);
 
         // Creates a Map.<string, number> from timeSeries where key is the instrument name and
         // value is the price type (e.g. 'open')
@@ -67,7 +77,9 @@ export default (data, capital) => {
             {
                 investedRatio: data.configuration.investedRatio,
                 maxRatioPerInstrument: data.configuration.maxRatioPerInstrument,
+                getPointValue: data.configuration.getPointValue,
             },
+            currentMargins,
             // Previous data
             {
                 orders: previousEntry.orders,

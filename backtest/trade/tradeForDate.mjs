@@ -8,20 +8,24 @@ import filterRebalances from './filterRebalances.mjs';
 
 /**
  * Executes trade for one certain date
- * @param  {number} date                          Date the trades are executed for
- * @param  {Map.<string, number>} openPrices      Open prices; key is the instrument's name, value
+ * @param {number} date                           Date the trades are executed for
+ * @param {Map.<string, number>} openPrices       Open prices; key is the instrument's name, value
  *                                                the open price at date
- * @param  {Map.<string, number>} closePrices     Closing prices; key is the instrument's name,
+ * @param {Map.<string, number>} closePrices      Closing prices; key is the instrument's name,
  *                                                value the clsoing price at date
- * @param  {Object.<string, number>[]} instructionSet  Instructions for the given date; key is the
+ * @param {Object.<string, number>[]} instructionSet  Instructions for the given date; key is the
  *                                                instruction's name, value the instruction's value,
  *                                                e.g. [{ select, -1, weight: 5 }]
- * @param  {number} options.investedRatio         Ratio of the total amount of money available
+ * @param {number} options.investedRatio          Ratio of the total amount of money available
  *                                                that should be invested
- * @param  {number} options.maxRatioPerInstrument Maximum ratio of the total amount of money
+ * @param {number} options.maxRatioPerInstrument  Maximum ratio of the total amount of money
  *                                                available that should be invested in one single
  *                                                instrument
- * @param  {object} previous                      Trading results from the previous date; see return
+ * @param {function} options.getPointValue        Function that takes instrument name as an argument
+ *                                                and returns point value
+ * @param {object[]} margins                      Margins for current date with one entry per
+ *                                                instrument, each with instrument, date, margin
+ * @param {object} previous                       Trading results from the previous date; see return
  *                                                comment
  * @return {object}                               Object with the trading results for the current
  *                                                date
@@ -31,12 +35,13 @@ export default (
     openPrices,
     closePrices,
     instructionSet,
-    { investedRatio, maxRatioPerInstrument },
+    { investedRatio, maxRatioPerInstrument, getPointValue },
+    margins,
     previous,
 ) => {
 
     // Execute orders (in the morning, when only open prices are known)
-    const { positions, unfulfilledOrders, cost } = executeOrders(
+    const { positions, cost } = executeOrders(
         // Use orders from previous close
         previous.orders,
         openPrices,

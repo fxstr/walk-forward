@@ -27,6 +27,8 @@ test('trades as expected', (t) => {
             investedRatio: 0.9,
             maxRatioPerInstrument: 0.5,
         },
+        // Margins
+        [],
         // Previous
         {
             // Previous positions
@@ -108,6 +110,8 @@ test('calculates amount available based on traded (and not all) instruments', (t
             investedRatio: 1,
             maxRatioPerInstrument: 1,
         },
+        // Margins
+        [],
         // Previous
         {
             // Previous positions
@@ -167,6 +171,8 @@ test('ignores rebalances if set to false', (t) => {
             investedRatio: 0.9,
             maxRatioPerInstrument: 0.5,
         },
+        // Margins
+        [],
         // Previous
         {
             // Previous positions
