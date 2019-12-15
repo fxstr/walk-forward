@@ -30,7 +30,7 @@ test('returns correct data (without transformFunction)', (t) => {
     ]]));
 });
 
-test('applies transformFunction', (t) => {
+test('applies column transformFunction', (t) => {
     const { transformFunction } = setupData();
     const data = readCSV('backtest/readCSV/testData/*.csv', transformFunction);
     t.deepEqual(data, new Map([[
@@ -45,3 +45,14 @@ test('applies transformFunction', (t) => {
         ])],
     ]]));
 });
+
+
+test('applies fileName transformFunction', (t) => {
+    const data = readCSV(
+        'backtest/readCSV/testData/*.csv',
+        undefined,
+        fileName => `${fileName}-newName`,
+    );
+    t.deepEqual(Array.from(data.keys()), ['valid-newName']);
+});
+

@@ -34,7 +34,11 @@ const { debug } = logger('WalkForward:readFromCSV');
  *                                          }
 
  */
-export default (globPattern, transformFunction = value => value) => {
+export default (
+    globPattern,
+    transformFunction = value => value,
+    fileNameTransformFunction = value => value,
+) => {
 
     const files = glob.sync(globPattern);
     debug('Read files %o', files);
@@ -66,7 +70,8 @@ export default (globPattern, transformFunction = value => value) => {
             .map(entry => new Map(Object.entries(entry)));
 
         const result = new Map(prev);
-        result.set(fileName, transformedData);
+        const instrumentName = fileNameTransformFunction(fileName);
+        result.set(instrumentName, transformedData);
         return result;
 
     }, new Map());
