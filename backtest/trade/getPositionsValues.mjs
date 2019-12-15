@@ -22,7 +22,7 @@ export default (positions, previousPositionValues, currentPrices, pointValues = 
             currentPrices.has(position.instrument) ?
                 calculatePositionValue(
                     position.size,
-                    // openPrice stays where it was
+                    // openPrice does not change unless position is enlarged
                     position.openPrice,
                     position.marginPrice,
                     currentPrices.get(position.instrument) *

@@ -10,7 +10,7 @@ const { debug } = logger('WalkForward:useData');
 /**
  * Transforms raw data from any source into internal data that is passed from function to function
  */
-export default function useData(emptyData, csvData) {
+export default function useData(emptyData, newData) {
 
     debug('useData called');
     const startTime = performance.now();
@@ -36,7 +36,7 @@ export default function useData(emptyData, csvData) {
     let fileIndex = 0;
 
     // Go through every instrument
-    for (const [instrumentName, instrumentData] of csvData) {
+    for (const [instrumentName, instrumentData] of newData) {
         result.instruments.add(instrumentName);
         // Check if dates are duplicate
         const usedDates = new Set();
@@ -69,7 +69,7 @@ export default function useData(emptyData, csvData) {
         }
 
         fileIndex++;
-        output.setText(`Loading files ${fileIndex}/${csvData.size}`);
+        output.setText(`Loading files ${fileIndex}/${newData.size}`);
 
     }
 
@@ -78,7 +78,7 @@ export default function useData(emptyData, csvData) {
     result.timeSeries.sort(sortBy('date', 'instrument'));
 
     const endTime = performance.now();
-    output.succeed(`${csvData.size} files loaded in ${Math.round(endTime - startTime)} ms`);
+    output.succeed(`${newData.size} files loaded (${Array.from(newData.keys()).join(', ')}) in ${Math.round(endTime - startTime)} ms`);
 
     return result;
 

@@ -40,7 +40,8 @@ export default function executeOrders(
         .from(orders.entries())
         .filter(([instrument]) => openPrices.has(instrument)));
 
-    // openPrices adjusted for pointValue
+    // openPrices adjusted for pointValue; corresponds to open price of one contract in base
+    // currency
     const adjustedOpenPrices = new Map(Array.from(openPrices.entries())
         .map(([instrument, price]) => [instrument, price * (pointValues.get(instrument) || 1)]));
 

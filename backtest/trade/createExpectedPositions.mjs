@@ -25,6 +25,9 @@ export default (
     const totalWeight = instructions.reduce((sum, { weight }) => sum + weight, 0);
 
     const newPositions = instructions
+        // instructionField may not yet have been calculated (e.g. for an ATR(50) if position is
+        // created on 40th bar); in this case, don't create a position
+        .filter(instruction => instructionFieldPrices.get(instruction.instrument) !== undefined)
         // Create array with [instrumentName, amountForThisInstrument, instruction]
         .map(instruction => [
             instruction.instrument,

@@ -82,7 +82,6 @@ export default (data, capital) => {
                 investedRatio: data.configuration.investedRatio,
                 maxRatioPerInstrument: data.configuration.maxRatioPerInstrument,
                 getPointValue: data.configuration.getPointValue,
-                getExchangeRate: data.configuration.getExchangeRate,
             },
             relativeMargins,
             // Previous data
