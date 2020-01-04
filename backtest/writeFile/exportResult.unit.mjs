@@ -55,6 +55,13 @@ test('exports data', (t) => {
             createSeries('aapl', [0, 2], 'positions'),
             // pos sizes – aapl
             createSeries('amzn', [5, 0], 'positions'),
+            // capital - total capital
+            {
+                yAxis: 'capital',
+                type: 'line',
+                name: 'capital',
+                data: [[120, 6], [121, 11]],
+            },
         ],
         plotOptions: {
             area: {
