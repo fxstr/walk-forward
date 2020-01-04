@@ -16,6 +16,17 @@ function doLog(logLevel, logFunction, ...originalParams) {
     logFunction(...originalParams);
 }
 
+
+/**
+ * Add date format
+ */
+const pad = nr => (nr < 10 ? `0${nr}` : `${nr}`);
+debug.formatters.t = (timestamp) => {
+    const date = new Date(timestamp);
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+};
+
+
 /**
  * Main export: Exports an object with different log levels as keys, each containing the
  * corresponding log function.

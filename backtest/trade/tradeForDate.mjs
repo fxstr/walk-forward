@@ -5,6 +5,9 @@ import getTradableAmount from './getTradableAmount.mjs';
 import getAmounts from './getAmounts.mjs';
 import createOrders from './createOrders.mjs';
 import filterRebalances from './filterRebalances.mjs';
+import logger from '../logger/logger.mjs';
+
+const { debug } = logger('WalkForward:tradeForDate');
 
 /**
  * Executes trade for one certain date
@@ -48,13 +51,13 @@ export default (
 ) => {
 
     // Set with all instrument names that are relevant for the current date (either have an
-    // instruction or a position or a price)
+    // instruction or a position or a price). Needed to get pointValues.
     const allInstruments = new Set(
         openPrices.keys(),
         instructionSet.map(({ instrument }) => instrument),
         previous.positions.map(({ instrument }) => instrument),
     );
-    // Map.<string, number> with point value for every relevant instrument on current datef
+    // Map.<string, number> with point value for every relevant instrument on current date
     const pointValues = new Map(Array.from(allInstruments)
         .map(instrument => [instrument, getPointValue(instrument, date)]));
 
@@ -69,8 +72,17 @@ export default (
         relativeMargins,
         pointValues,
     );
-
     const cash = previous.cash - cost;
+
+    if (positions.length) {
+        debug(
+            '%t: Created positions %O with cost %o for pointValues %o',
+            date,
+            positions,
+            cost,
+            pointValues,
+        );
+    }
 
     // Get values of all positions (in the evening when close prices are known); value is needed
     // to calculate orders for next day.
@@ -80,6 +92,14 @@ export default (
         closePrices,
         pointValues,
     );
+
+    if (positionValues.size) {
+        debug(
+            '%t: Current position values are %o',
+            date,
+            positionValues,
+        );
+    }
 
     const allPositionsValue = Array
         .from(positionValues.values())
@@ -124,6 +144,9 @@ export default (
     // Map.<string, number> where key is the instrument name and value is the order size. Ignore
     // all orders that have existed previously but were not executed.
     const orders = createOrders(expectedPositions, currentPositions);
+
+    if (orders.size) debug('%t: Orders are %O', date, orders);
+
 
     return {
         date,

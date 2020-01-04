@@ -1,4 +1,5 @@
 import logger from '../logger/logger.mjs';
+import getTotalCapital from '../trade/getTotalCapital.mjs';
 
 const { debug } = logger('WalkForward:exportResult');
 
@@ -7,7 +8,8 @@ const { debug } = logger('WalkForward:exportResult');
  * into Highstock format
  */
 export default () => (data) => {
-    debug('RESULT is %o', data.result);
+
+    debug('Result is %o', data.result);
 
     const panels = [
         // First panel: Capital with cash and positionValue for every single instrument
@@ -23,6 +25,8 @@ export default () => (data) => {
             id: 'positions',
         },
     ];
+
+    const capital = getTotalCapital(data.result);
 
     // Create one entry for every instrument. Even if it does not have have a position, we want
     // it its position value be 0.
@@ -41,6 +45,13 @@ export default () => (data) => {
             stack: 'capital',
         }));
 
+    // Print capital line on top of cash/positions
+    const capitalSeries = {
+        data: capital,
+        name: 'capital',
+        type: 'line',
+        yAxis: 'capital',
+    };
 
     const cashSeries = {
         data: data.result.map(item => [item.date, item.cash]),
@@ -70,7 +81,7 @@ export default () => (data) => {
         title: 'Result',
         yAxis: panels,
         // Cash must be at the end if the positionValues should be stacked on/above it
-        series: [...positionValueSeries, cashSeries, ...positionSizes],
+        series: [...positionValueSeries, cashSeries, ...positionSizes, capitalSeries],
         plotOptions: {
             area: {
                 stacking: 'normal',

@@ -10,8 +10,9 @@ import express from 'express';
  * @param  {Response} response  Express response object that we write our data to
  */
 function createFileChangeHandler(filePath, response) {
-    return () => {
+    return (...args) => {
         console.log(`server.mjs: ${filePath} changed.`);
+        console.log('Callback arguments are %o', args);
         const content = readFileSync(filePath, 'utf8');
         // Start every line with data:
         // As \n\n starts a new message, convert more than one \n to to just one \n

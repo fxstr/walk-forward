@@ -1,6 +1,6 @@
 /**
- * Exports Highstock panel and series for results (positions, orders) and instructions (weight,
- * selected, trade).
+ * Exports results (positions, orders) and instructions(weight, selected, trade) for an instrument
+ * as a Highstock chart.
  * @param {Object} results         See tradeForDate()
  * @param {Object} instructions    See createDefaultInstructions()
  * @param {string} instrumentName
@@ -52,7 +52,8 @@ export default (results, instructions, instrumentName) => {
                 relativeValue = 0;
             }
             // Start with relativeValue 1 if we just opened the position in the current direction
-            else if (Math.sign(latest.adjustedAbsoluteValue) !== Math.sign(positionValueAdjustedForSize)) {
+            else if (Math.sign(latest.adjustedAbsoluteValue) !==
+                Math.sign(positionValueAdjustedForSize)) {
                 relativeValue = 1;
             }
             // Use relative value if position was already open

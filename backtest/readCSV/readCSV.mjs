@@ -1,3 +1,4 @@
+import { performance } from 'perf_hooks';
 import { readFileSync } from 'fs';
 import { parse as parsePath } from 'path';
 import glob from 'glob';
@@ -5,6 +6,7 @@ import glob from 'glob';
 import parseCSV from '../../node_modules/csv-parse/lib/sync.js';
 import logger from '../logger/logger.mjs';
 import transformObject from '../dataHelpers/transformObject.mjs';
+import spinner from '../spinner/spinner.mjs';
 
 const { debug } = logger('WalkForward:readFromCSV');
 
@@ -40,7 +42,10 @@ export default (
     fileNameTransformFunction = value => value,
 ) => {
 
+    const startTime = performance.now();
     const files = glob.sync(globPattern);
+    const output = spinner('Load CSV files …');
+
     debug('Read files %o', files);
     if (files.length === 0) {
         console.warn('readFromCSV: There are no files to be read');
@@ -52,7 +57,9 @@ export default (
     };
 
     // Flatten data into a single array of data sets; add column instrument
-    return files.reduce((prev, file) => {
+    const fileContent = files.reduce((prev, file) => {
+
+        output.setText(`Loading ${file} …`);
 
         const content = readFileSync(file);
         const parsedData = parseCSV(content, parseOptions);
@@ -75,5 +82,10 @@ export default (
         return result;
 
     }, new Map());
+
+    const duration = Math.round(performance.now() - startTime);
+    output.succeed(`${files.length} CSV files loaded in ${duration} ms`);
+
+    return fileContent;
 
 };

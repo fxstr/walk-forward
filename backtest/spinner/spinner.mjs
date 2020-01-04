@@ -10,6 +10,7 @@ export default (text) => {
     return {
         setText: (content) => {
             spinner.text = content;
+            spinner.render();
         },
         succeed: (content) => {
             spinner.color = 'green';

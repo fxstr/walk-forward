@@ -78,7 +78,8 @@ export default function useData(emptyData, newData) {
     result.timeSeries.sort(sortBy('date', 'instrument'));
 
     const endTime = performance.now();
-    output.succeed(`${newData.size} files loaded (${Array.from(newData.keys()).join(', ')}) in ${Math.round(endTime - startTime)} ms`);
+    // const fileNames = ${Array.from(newData.keys()).join(', ')};
+    output.succeed(`${newData.size} files loaded in ${Math.round(endTime - startTime)} ms`);
 
     return result;
 
