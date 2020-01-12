@@ -9,6 +9,7 @@ import {
     talibIndicator,
     convertInstrumentToHighstock,
     exportResult,
+    exportPerformance,
 } from '../main.mjs';
 
 
@@ -138,6 +139,11 @@ async function executeTest() {
         .writeFile(
             join(workingDirectory, 'output/result.json'),
             exportResult(),
+        )
+
+        .writeFile(
+            join(workingDirectory, 'output/performance.csv'),
+            exportPerformance(),
         )
 
         // Actually runs the stack – must be at the end

@@ -9,7 +9,7 @@ test('uses ohlc/main for ohlc data', (t) => {
         entry.set('high', Math.max(entry.get('open'), entry.get('close')) + 1);
     });
     const result = convertInstrumentToHighstock('aapl')(data);
-    t.deepEqual(result, {
+    t.deepEqual(JSON.parse(result), {
         series: [{
             type: 'ohlc',
             data: [
@@ -37,7 +37,7 @@ test('does not fail if ohlc is missing, uses line instead', (t) => {
         entry.delete('close');
     });
     const result = convertInstrumentToHighstock('aapl')(data);
-    t.deepEqual(result, {
+    t.deepEqual(JSON.parse(result), {
         series: [{
             type: 'line',
             data: [
@@ -73,7 +73,7 @@ test('creates new panel, uses line as default', (t) => {
         ]),
     };
     const result = convertInstrumentToHighstock('aapl')(data);
-    t.deepEqual(result, {
+    t.deepEqual(JSON.parse(result), {
         series: [{
             type: 'line',
             data: [
@@ -117,7 +117,7 @@ test('does not output if panel is false', (t) => {
         ]),
     };
     const result = convertInstrumentToHighstock('aapl')(data);
-    t.deepEqual(result, {
+    t.deepEqual(JSON.parse(result), {
         series: [],
         yAxis: [{
             top: '0%',
@@ -135,7 +135,7 @@ test('creates result panel if available', (t) => {
         orders: new Map(),
         positionValues: new Map(),
     }];
-    const result = convertInstrumentToHighstock('aapl')(data);
+    const result = JSON.parse(convertInstrumentToHighstock('aapl')(data));
     // Only test basically; detailed tests are in createResultChart.
     const resultPanel = result.yAxis.find(axis => axis.id === 'resultPanel');
     t.is(resultPanel.constructor, Object);

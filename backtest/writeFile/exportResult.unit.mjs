@@ -34,7 +34,9 @@ test('exports data', (t) => {
         }],
     };
     const result = exportResult()(data);
-    t.deepEqual(result, {
+    // Compare JS objects (instead of stringified JSON) as were free to chose the object's order
+    // this way
+    t.deepEqual(JSON.parse(result), {
         title: 'Result',
         yAxis: [{
             height: '70%',

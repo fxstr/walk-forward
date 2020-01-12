@@ -5,6 +5,7 @@ import {
     talibIndicator,
     convertInstrumentToHighstock,
     exportResult,
+    exportPerformance,
     groupBy,
     addRowsToTimeSeries,
 } from './main.mjs';
@@ -16,6 +17,7 @@ test('creates all exports', (t) => {
         talibIndicator,
         convertInstrumentToHighstock,
         exportResult,
+        exportPerformance,
         groupBy,
         addRowsToTimeSeries,
     ].forEach(exportedFunction => t.is(typeof exportedFunction, 'function'));

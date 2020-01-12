@@ -56,11 +56,11 @@ test('reduces position in both directions', (t) => {
 
 test('reduces to 0 in both directions', (t) => {
     t.deepEqual(
-        mergePositions(createPosition(), createPosition(-10)),
+        mergePositions(createPosition(), createPosition(-10, 2, 125)),
         createPosition(0, 2, 123),
     );
     t.deepEqual(
-        mergePositions(createPosition(-10), createPosition(10)),
+        mergePositions(createPosition(-10), createPosition(10, 2, 125)),
         createPosition(0, 2, 123),
     );
 });

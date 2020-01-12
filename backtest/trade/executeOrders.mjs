@@ -21,7 +21,10 @@ import calculatePositionsValues from './calculatePositionsValues.mjs';
  * @param {Map.<string, number>} pointValues    Worth of one point in the base currency
  * @return {Object}                       Object with
  *                                        - positions (new positions as array of objects, see
- *                                          createPosition())
+ *                                          createPosition()). Closed positions will have size 0
+ *                                          for one bar, afterwards they will be removed. This is
+ *                                          needed to create performance indicators at the end
+ *                                          (e.g. was it a winning or losing trade?)
  *                                        - cost: total cost of all trades that were made
  */
 export default function executeOrders(
@@ -69,8 +72,18 @@ export default function executeOrders(
     const positions = newAndOldPositionsGrouped
         // Merge old and new positions of the same instrument
         .map(([, positionData]) => mergePositions(...positionData))
-        // Remove all empty positions
-        .filter(position => position.size !== 0);
+        // Remove all empty positions – but only if they were empty previously. If a position is
+        // empty for the first time, leave it at 0. Only then, we can evaluate it to get a
+        // performance indication of our strategy (to know if a position was winning or losing,
+        // we need to know the price it was sold for).
+        .filter((position) => {
+            // const previousPosition = previousPositions
+            //    .find(prevPosition => prevPosition.instrument === position.instrument);
+            // const previousPositionWas0 = previousPosition && previousPosition.size === 0;
+            // const remove = position.size === 0 && previousPositionWas0;
+            // return !remove;
+            return position.size !== 0;
+        });
 
     // Calculate cost used/feed by executing all orders. Equals the *current* value of all current
     // positions minus the *current* value of all previous positions. We can neglect all instruments

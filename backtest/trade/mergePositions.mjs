@@ -1,6 +1,7 @@
 /**
  * Merges any amount of positions into one single position
- * @param {Object} positions    Positions to merge. See createPosition for structure.
+ * @param {Object} positions    Positions to merge. See createPosition for structure. The later
+ * position is merged into the previous position.
  */
 export default (...positions) => positions.slice(1).reduce(
     (combined, position) => {
@@ -10,9 +11,9 @@ export default (...positions) => positions.slice(1).reduce(
         // Merged position's size
         const size = combined.size + position.size;
 
-        // Open date: Use date of combined position if position is extended; else (new position,
-        // opposite direction) use new date
-        const openDate = (Math.sign(combined.size) === Math.sign(size)) ?
+        // Open date: Use date of combined (existing) position if position is extended, reduced or
+        // closed; else (new position, opposite direction) use new date
+        const openDate = (Math.sign(combined.size) === Math.sign(size) || size === 0) ?
             combined.openDate : position.openDate;
 
         // Open price:

@@ -59,7 +59,7 @@ export default instrumentName => (data) => {
     ]);
     result.yAxis = createPanels(allPanels);
 
-    return result;
+    return JSON.stringify(result);
 
 };
 

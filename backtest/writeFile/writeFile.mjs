@@ -16,7 +16,7 @@ export default (data, path, getDataFunction) => {
     const dataToWrite = getDataFunction(data);
     // We cannot nicely format JSON as this will break EventSource in frontend (newline mean a
     // new message)
-    writeFileSync(path, JSON.stringify(dataToWrite));
+    writeFileSync(path, dataToWrite);
 
     debug('File %s written.', path);
     const endTime = performance.now();

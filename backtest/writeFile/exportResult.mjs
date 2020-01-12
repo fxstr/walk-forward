@@ -77,7 +77,7 @@ export default () => (data) => {
             ]),
         }));
 
-    return {
+    return JSON.stringify({
         title: 'Result',
         yAxis: panels,
         // Cash must be at the end if the positionValues should be stacked on/above it
@@ -87,6 +87,6 @@ export default () => (data) => {
                 stacking: 'normal',
             },
         },
-    };
+    });
 
 };

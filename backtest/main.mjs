@@ -5,6 +5,7 @@ import convertInstrumentToHighstock from './writeFile/convertInstrumentToHighsto
 import exportResult from './writeFile/exportResult.mjs';
 import groupBy from './dataHelpers/groupBy.mjs';
 import addRowsToTimeSeries from './addIndicator/addRowsToTimeSeries.mjs';
+import exportPerformance from './performanceIndicators/exportPerformance.mjs';
 
 export {
     createStrategy,
@@ -12,6 +13,7 @@ export {
     talibIndicator,
     convertInstrumentToHighstock,
     exportResult,
+    exportPerformance,
     groupBy,
     addRowsToTimeSeries,
 };

@@ -46,7 +46,8 @@ test('creates (multiple) positions', (t) => {
 });
 
 
-test('does not return closed positions', (t) => {
+/* test('closed positions have size 0 and are removed afterwards', (t) => {
+    // Closing position
     const result = executeOrders(
         new Map([['test', -2]]),
         new Map([['test', 3]]),
@@ -57,14 +58,62 @@ test('does not return closed positions', (t) => {
             openPrice: 4,
             marginPrice: 4,
         }],
+        124,
+    );
+    t.deepEqual(result, {
+        positions: [{
+            instrument: 'test',
+            size: 0,
+            openDate: 123,
+            openPrice: 3,
+            marginPrice: 3,
+        }],
+        // Money is freed, cost is therefore negative
+        cost: -6,
+    });
+
+    // If size is 0 for 2 consecutive bars, remove order completely
+    const resultWithoutPosition = executeOrders(
+        new Map([['test', 0]]),
+        new Map([['test', 3]]),
+        [{
+            size: 0,
+            instrument: 'test',
+            openDate: 123,
+            openPrice: 4,
+            marginPrice: 4,
+        }],
+        124,
+    );
+    t.deepEqual(resultWithoutPosition, {
+        positions: [],
+        // Money is freed, cost is therefore negative
+        cost: 0,
+    });
+
+}); */
+
+ test('closed positions are removed', (t) => {
+    // Closing position
+    const result = executeOrders(
+        new Map([['test', -2]]),
+        new Map([['test', 3]]),
+        [{
+            size: 2,
+            instrument: 'test',
+            openDate: 123,
+            openPrice: 4,
+            marginPrice: 4,
+        }],
+        124,
     );
     t.deepEqual(result, {
         positions: [],
         // Money is freed, cost is therefore negative
         cost: -6,
     });
-});
 
+});
 
 test('updates positions', (t) => {
     const result = executeOrders(
