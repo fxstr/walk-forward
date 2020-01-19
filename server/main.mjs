@@ -15,13 +15,10 @@ if (argv.length < 3) {
     exit();
 }
 const [,, fileArgument] = argv;
-if (!fileArgument.startsWith('file=')) {
-    console.error('main.mjs: Pass one argument that has the following format: "file=[fileName.ext]".');
-    exit();
-}
 
 try {
-    const filePath = fileArgument.substr(5);
+    const filePath = fileArgument;
+    console.log(`main.js: Watching file ${filePath}`);
     setupServer(filePath);
     exec('open -a "Google Chrome" http://localhost:8000');
     console.log('main.js: Ready, file is %s', filePath);

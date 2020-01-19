@@ -42,8 +42,6 @@ export default function talibIndicator({
     // current data
     return async(data) => {
 
-        const start = performance.now();
-
         const dataAsRows = convertColsToRows(
             data.timeSeries,
             data.instrumentKey,
@@ -85,7 +83,10 @@ export default function talibIndicator({
 
         }
 
-        return addRowsToTimeSeries(indicators, data.timeSeries, data.instrumentKey);
+        return {
+            ...data,
+            timeSeries: addRowsToTimeSeries(indicators, data.timeSeries, data.instrumentKey),
+        };
 
     };
 

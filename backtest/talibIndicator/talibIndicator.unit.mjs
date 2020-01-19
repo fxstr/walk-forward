@@ -43,11 +43,11 @@ test('returns data as expected', async(t) => {
         outputs: { outReal: 'sma' },
     })(data);
     t.deepEqual(
-        result[0],
+        result.timeSeries[0],
         new Map([...data.timeSeries[0], ['sma', undefined]]),
     );
     t.deepEqual(
-        result[1],
+        result.timeSeries[1],
         new Map([...data.timeSeries[1], ['sma', 13.6]]),
     );
 });

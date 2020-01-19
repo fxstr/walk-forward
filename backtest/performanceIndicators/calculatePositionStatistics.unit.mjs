@@ -27,7 +27,8 @@ test('returns expected result', (t) => {
         numberOfWinningPositions: 2,
         numberOfLosingPositions: 2,
         percentProfitable: 2 / 5,
-        averageHoldingTimeInDays: 14 / 5,
+        // (4 + 2 + 2 + 2 + 4) / 5 converted to days
+        averageHoldingTimeInDays: 14 / 5 / (1000 * 60 * 60 * 24),
         grossProfit: 6,
         grossLoss: 5,
         profitFactor: 6 / 5,

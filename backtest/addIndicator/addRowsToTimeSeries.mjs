@@ -4,6 +4,11 @@ import groupBy from '../dataHelpers/groupBy.mjs';
  * Merges row-based data (used for indicators) with original data. We do not split this
  * functionality into two parts due to performance improvements with one solution that converts to
  * cols and adds them at the same time.
+ * @param {Map.<string, Map.<string, number[]>>} rowBasedData      Map with instrumentName as key
+ *                                                   and new Map as value. This Map has row name as
+ *                                                   key and array of numbers as value.
+ * @param {Map[]} originalData                       Original timeSeries as an array of maps
+ * @param {Symbol} instrumentKey                     Instrument key
  */
 export default (rowBasedData, originalData, instrumentKey) => {
 

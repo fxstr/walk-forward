@@ -25,6 +25,8 @@ export default function useData(emptyData, newData) {
         instrumentKey,
         // Must always be sorted chronologically. If we have to re-sort during execution, we lose
         // a few secs for every sort operation
+        // Contains Maps; keys are field names ('date', instrumentKey, 'open' etc.), value is
+        // field's value.
         timeSeries: [],
         // Must always be sorted chronologically (see timeSeries above)
         instructions: [],

@@ -16,14 +16,11 @@ export default async(data, indicatorFunction) => {
     const output = spinner('Adding indicator …');
     const startTime = performance.now();
 
-    const indicatorData = await indicatorFunction(data);
+    const result = await indicatorFunction(data);
 
     const endTime = performance.now();
     output.succeed(`Added indicator in ${Math.round(endTime - startTime)} ms`);
 
-    return {
-        ...data,
-        timeSeries: indicatorData,
-    };
+    return result;
 
 };

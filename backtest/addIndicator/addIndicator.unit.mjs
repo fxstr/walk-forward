@@ -5,10 +5,13 @@ import walkStructure from '../dataHelpers/walkStructure.mjs';
 
 const setupData = () => {
     const { data } = createTestData();
-    const indicatorData = data.timeSeries.map((entry, index) => new Map([
-        ...entry,
-        ['indicator', index],
-    ]));
+    const indicatorData = {
+        ...data,
+        timeSeries: data.timeSeries.map((entry, index) => new Map([
+            ...entry,
+            ['indicator', index],
+        ])),
+    };
     return { data, indicatorData };
 };
 
