@@ -9,7 +9,5 @@ test('creates all exports', (t) => {
         'convertInstrumentToHighstock',
         'exportResult',
         'exportPerformance',
-        'groupBy',
-        'rSquared',
     ].forEach(exportedFunction => t.is(typeof walkForward[exportedFunction], 'function'));
 });
