@@ -1,7 +1,4 @@
 import createPosition from './createPosition.mjs';
-import groupBy from '../dataHelpers/groupBy.mjs';
-import mergePositions from './mergePositions.mjs';
-import calculatePositionsValues from './calculatePositionsValues.mjs';
 
 /**
  * Executes orders for a given date.
@@ -11,11 +8,6 @@ import calculatePositionsValues from './calculatePositionsValues.mjs';
  * @param  {Map} prices                   Data for a date:
  *                                        - key: instrument's name
  *                                        - value: instrument's open price
- * @param  {object[]} previousPositions   Previous positions, every object with
- *                                        - instrument (name)
- *                                        - size
- *                                        - openDate
- *                                        - openPrice
  * @param {Map.<string, number>} relativeMargins   Relative margins for all current instruments.
  *                                        Defaults to empty map which is replaced with 1.
  * @param {Map.<string, number>} pointValues    Worth of one point in the base currency
@@ -30,8 +22,6 @@ import calculatePositionsValues from './calculatePositionsValues.mjs';
 export default function executeOrders(
     orders,
     openPrices,
-    previousPositions,
-    date,
     // Use defaults to simplify testing
     relativeMargins = new Map(),
     pointValues = new Map(),
@@ -45,9 +35,8 @@ export default function executeOrders(
 
     // openPrices adjusted for pointValue; corresponds to open price of one contract in base
     // currency
-    const adjustedOpenPrices = new Map(Array.from(openPrices.entries())
-        .map(([instrument, price]) => [instrument, price * (pointValues.get(instrument) || 1)]));
-
+    // const openPricesAdjustedForPointValue = new Map(Array.from(openPrices.entries())
+    //    .map(([instrument, price]) => [instrument, price * (pointValues.get(instrument) || 1)]));
 
     // Create a position for every order that has an open value for the current date
     const newPositions = Array
@@ -55,48 +44,11 @@ export default function executeOrders(
         .map(([instrument, size]) => createPosition(
             instrument,
             size,
-            adjustedOpenPrices.get(instrument),
-            date,
-            (relativeMargins.get(instrument) || 1) * adjustedOpenPrices.get(instrument),
+            openPrices.get(instrument),
+            (relativeMargins.get(instrument) || 1) * openPrices.get(instrument),
+            pointValues.get(instrument),
         ));
 
-    // Concat old and new positions, group by instrument
-    const newAndOldPositionsGrouped = groupBy(
-        // Make sure previous positions come first, as new positions should be merged into previous
-        // ones (and not the opposite)
-        [...previousPositions, ...newPositions],
-        ({ instrument }) => instrument,
-    );
-
-    // Merge multiple positions of the same instrument into one single position
-    const positions = newAndOldPositionsGrouped
-        // Merge old and new positions of the same instrument
-        .map(([, positionData]) => mergePositions(...positionData))
-        // Remove all empty positions – but only if they were empty previously. If a position is
-        // empty for the first time, leave it at 0. Only then, we can evaluate it to get a
-        // performance indication of our strategy (to know if a position was winning or losing,
-        // we need to know the price it was sold for).
-        .filter((position) => {
-            // const previousPosition = previousPositions
-            //    .find(prevPosition => prevPosition.instrument === position.instrument);
-            // const previousPositionWas0 = previousPosition && previousPosition.size === 0;
-            // const remove = position.size === 0 && previousPositionWas0;
-            // return !remove;
-            return position.size !== 0;
-        });
-
-    // Calculate cost used/feed by executing all orders. Equals the *current* value of all current
-    // positions minus the *current* value of all previous positions. We can neglect all instruments
-    // without data as those are not traded.
-    const hasOpenData = position => openPrices.has(position.instrument);
-    const newPositionsWithData = positions.filter(hasOpenData);
-    const previousPositionsWithData = previousPositions.filter(hasOpenData);
-    const cost = calculatePositionsValues(newPositionsWithData, adjustedOpenPrices) -
-        calculatePositionsValues(previousPositionsWithData, adjustedOpenPrices);
-
-    return {
-        positions,
-        cost,
-    };
+    return newPositions;
 
 }

@@ -39,7 +39,8 @@ export default () => (data) => {
             fillOpacity: 1,
             data: data.result.map(entry => [
                 entry.date,
-                entry.positionValues.get(instrument) || 0,
+                (entry.positions.find(position => position.instrument === instrument
+                    && position.type === 'close') || { value: 0 }).value,
             ]),
             // https://api.highcharts.com/highcharts/series.line.stack
             stack: 'capital',
@@ -87,6 +88,6 @@ export default () => (data) => {
                 stacking: 'normal',
             },
         },
-    });
+    }, null, 2);
 
 };

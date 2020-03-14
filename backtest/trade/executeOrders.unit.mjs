@@ -1,5 +1,6 @@
 import test from 'ava';
 import executeOrders from './executeOrders.mjs';
+import createPosition from './createPosition.mjs';
 
 
 test('works with no data', (t) => {
@@ -9,10 +10,7 @@ test('works with no data', (t) => {
         [],
         123,
     );
-    t.deepEqual(result, {
-        positions: [],
-        cost: 0,
-    });
+    t.deepEqual(result, []);
 });
 
 
@@ -22,216 +20,40 @@ test('creates (multiple) positions', (t) => {
         new Map([['test', 2], ['test2', -1]]),
         // Open prices
         new Map([['test', 3], ['test2', 2]]),
-        // Current orders
-        [],
-        // Date
-        123,
     );
-    t.deepEqual(result, {
-        positions: [{
-            size: 2,
-            instrument: 'test',
-            openDate: 123,
-            openPrice: 3,
-            marginPrice: 3,
-        }, {
-            size: -1,
-            instrument: 'test2',
-            openDate: 123,
-            openPrice: 2,
-            marginPrice: 2,
-        }],
-        cost: 8,
-    });
+    t.deepEqual(result, [
+        createPosition('test', 2, 3, 3),
+        createPosition('test2', -1, 2, 2),
+    ]);
 });
 
 
-/* test('closed positions have size 0 and are removed afterwards', (t) => {
-    // Closing position
+test('does not create orders if open is missing', (t) => {
     const result = executeOrders(
-        new Map([['test', -2]]),
-        new Map([['test', 3]]),
-        [{
-            size: 2,
-            instrument: 'test',
-            openDate: 123,
-            openPrice: 4,
-            marginPrice: 4,
-        }],
-        124,
+        new Map([['a', 2], ['b', 3]]),
+        new Map([['a', 5]]),
     );
-    t.deepEqual(result, {
-        positions: [{
-            instrument: 'test',
-            size: 0,
-            openDate: 123,
-            openPrice: 3,
-            marginPrice: 3,
-        }],
-        // Money is freed, cost is therefore negative
-        cost: -6,
-    });
-
-    // If size is 0 for 2 consecutive bars, remove order completely
-    const resultWithoutPosition = executeOrders(
-        new Map([['test', 0]]),
-        new Map([['test', 3]]),
-        [{
-            size: 0,
-            instrument: 'test',
-            openDate: 123,
-            openPrice: 4,
-            marginPrice: 4,
-        }],
-        124,
-    );
-    t.deepEqual(resultWithoutPosition, {
-        positions: [],
-        // Money is freed, cost is therefore negative
-        cost: 0,
-    });
-
-}); */
-
- test('closed positions are removed', (t) => {
-    // Closing position
-    const result = executeOrders(
-        new Map([['test', -2]]),
-        new Map([['test', 3]]),
-        [{
-            size: 2,
-            instrument: 'test',
-            openDate: 123,
-            openPrice: 4,
-            marginPrice: 4,
-        }],
-        124,
-    );
-    t.deepEqual(result, {
-        positions: [],
-        // Money is freed, cost is therefore negative
-        cost: -6,
-    });
-
+    t.deepEqual(result, [createPosition('a', 2, 5, 5)]);
 });
 
-test('updates positions', (t) => {
+test('respects relative margin', (t) => {
     const result = executeOrders(
-        new Map([['test', 2]]),
-        new Map([['test', 4]]),
-        [{
-            size: 2,
-            instrument: 'test',
-            openPrice: 3,
-            openDate: 120,
-            marginPrice: 2,
-        }],
-        123,
+        new Map([['a', 2]]),
+        new Map([['a', 5]]),
+        new Map([['a', 0.5]]),
     );
-    t.deepEqual(result, {
-        positions: [{
-            size: 4,
-            instrument: 'test',
-            openDate: 120,
-            openPrice: 3.5,
-            // 2@2, 2@4
-            marginPrice: 3,
-        }],
-        cost: 8,
-    });
+    t.deepEqual(result, [createPosition('a', 2, 5, 2.5)]);
 });
-
-
-test('works with negative sizes', (t) => {
-    const result = executeOrders(
-        // Orders
-        new Map([['test', -1]]),
-        // Open prices
-        new Map([['test', 4]]),
-        // Position
-        [{
-            size: -3,
-            instrument: 'test',
-            openPrice: 3,
-            openDate: 120,
-            marginPrice: 3,
-        }],
-        // Date
-        123,
-    );
-    t.deepEqual(result, {
-        positions: [{
-            size: -4,
-            instrument: 'test',
-            openDate: 120,
-            openPrice: 3.25,
-            marginPrice: 3.25,
-        }],
-        cost: 4,
-    });
-});
-
-
-test('respects margin', (t) => {
-    const result = executeOrders(
-        // Orders
-        new Map([['test', -1]]),
-        // Open prices
-        new Map([['test', 4]]),
-        // Position
-        [{
-            size: -3,
-            instrument: 'test',
-            openPrice: 3,
-            openDate: 120,
-            marginPrice: 2,
-        }],
-        // Date
-        123,
-        // Margin
-        new Map([['test', 0.55]]),
-    );
-    t.deepEqual(result, {
-        positions: [{
-            size: -4,
-            instrument: 'test',
-            openDate: 120,
-            openPrice: 3.25,
-            // 1 @ 2.2, 3 @ 2 = 8.2 / 4
-            marginPrice: 2.05,
-        }],
-        // Shorted 1 @ 0.55 * 4 (JS and numbers …)
-        cost: 2.1999999999999993,
-    });
-
-});
-
 
 test('respects pointValue', (t) => {
     const result = executeOrders(
-        // Orders
-        new Map([['test', -2]]),
-        // Open prices
-        new Map([['test', 4]]),
-        // Existing positions
-        [],
-        // Date
-        123,
-        // Margin
-        undefined,
-        // pointValue
-        new Map([['test', 40]]),
+        new Map([['a', 2]]),
+        new Map([['a', 5]]),
+        new Map([['a', 0.5]]),
+        // Assume contract size 10 (or exchange rate 10)
+        new Map([['a', 10]]),
     );
-    t.deepEqual(result, {
-        positions: [{
-            size: -2,
-            instrument: 'test',
-            openDate: 123,
-            openPrice: 160,
-            marginPrice: 160,
-        }],
-        cost: 320,
-    });
-
+    t.deepEqual(result, [createPosition('a', 2, 5, 2.5, 10)]);
 });
+
 

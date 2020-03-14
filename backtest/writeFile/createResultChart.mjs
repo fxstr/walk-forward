@@ -40,12 +40,12 @@ export default (results, instructions, instrumentName) => {
         .reduce((previous, result) => {
             const latest = previous.slice(-1).pop() || {};
             // Get current position value
-            const currentValue = result.positionValues.get(instrumentName);
-            // Get position (to get size); we divide the position value by the position size so
-            // that relativeValue does not grow when positions are enlarged.
             const currentPosition = result.positions
-                .find(position => position.instrument === instrumentName);
-            const currentPositionSize = (currentPosition && currentPosition.size) || 0;
+                .find(({ instrument }) => instrument === instrumentName);
+            const currentValue = currentPosition ? currentPosition.value : 0;
+            // We divide the position value by the position size so
+            // that relativeValue does not grow when positions are enlarged.
+            const currentPositionSize = currentPosition ? currentPosition.size : 0;
             const positionValueAdjustedForSize = currentValue / currentPositionSize;
             let relativeValue;
             if (currentPositionSize === 0) {

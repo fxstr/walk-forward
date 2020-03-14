@@ -4,7 +4,7 @@ import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { existsSync, unlinkSync, readFileSync } from 'fs';
 import {
-    createStrategy,
+    createBacktest,
     readCSV,
     talibIndicator,
     convertInstrumentToHighstock,
@@ -18,7 +18,7 @@ const workingDirectory = dirname(fileURLToPath(import.meta.url));
 
 async function executeTest() {
 
-    await createStrategy()
+    await createBacktest()
 
         .useData(readCSV(
             join(
@@ -141,6 +141,7 @@ async function executeTest() {
             exportResult(),
         )
 
+        .calculatePerformance()
         .writeFile(
             join(workingDirectory, 'output/performance.csv'),
             exportPerformance(),

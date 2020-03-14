@@ -10,6 +10,7 @@ import weight from '../instructions/weight.mjs';
 import rebalance from '../instructions/rebalance.mjs';
 import doFunction from '../do/do.mjs';
 import truncate from '../truncate/truncate.mjs';
+import calculatePerformance from '../performanceIndicators/calculatePerformance.mjs';
 
 /**
  * Returns an object which contains all methods that can be called on a strategy (sort,
@@ -19,7 +20,7 @@ import truncate from '../truncate/truncate.mjs';
  *                          is an array with [methodFunction, argument1, argument2, …].
  * @return {Object}         Object with keys for all methods that can be called on the stack.
  */
-const createStrategy = (stack = []) => {
+const createBacktest = (stack = []) => {
 
     const methods = [
         ['useData', useData],
@@ -33,6 +34,7 @@ const createStrategy = (stack = []) => {
         ['rebalance', rebalance],
         ['truncate', truncate],
         ['do', doFunction],
+        ['calculatePerformance', calculatePerformance],
     ];
 
     // Add every method to object and set value to a function that
@@ -40,7 +42,7 @@ const createStrategy = (stack = []) => {
     // b) returns a new object
     const object = methods.reduce((prev, [methodName, methodFunction]) => ({
         ...prev,
-        [methodName]: (...params) => createStrategy([...stack, [methodFunction, ...params]]),
+        [methodName]: (...params) => createBacktest([...stack, [methodFunction, ...params]]),
     }), {});
 
     object.run = capital => run(stack, capital);
@@ -49,4 +51,4 @@ const createStrategy = (stack = []) => {
 
 };
 
-export default createStrategy;
+export default createBacktest;

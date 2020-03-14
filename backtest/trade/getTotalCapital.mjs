@@ -8,8 +8,8 @@ export default result => (
 
     result.map(bar => [
         bar.date,
-        bar.cash + Array.from(bar.positionValues.values())
-            .reduce((sum, value) => sum + value, 0),
+        bar.cash + bar.positions.filter(({ type }) => type === 'close')
+            .reduce((sum, { value }) => sum + value, 0),
     ])
 
 );

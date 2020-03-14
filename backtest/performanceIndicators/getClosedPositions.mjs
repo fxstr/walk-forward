@@ -1,37 +1,60 @@
+import groupBy from '../dataHelpers/groupBy.mjs';
+import calculatePositionValue from '../trade/calculatePositionValue.mjs';
+
+/**
+ * Gets parameters (open and final close price etc.) for all closed positions
+ * @param  {object[]} result     Result as created by trade.mjs; object has properties date, orders
+ *                               positions etc.
+ * @return {object[]}            Array with one entry per closed position; every closed position
+ *                               has properties bars, openValue, closeValue, instrument.
+ */
 export default result => (
 
-    result.reduce((previous, entry) => {
+    result.reduce((previouslyClosedPositions, entry) => {
 
-        const closed = previous.result.positions.filter((previousPosition) => {
-            // Get current positions entry for same instrument
-            const currentPosition = entry.positions
-                .find(({ instrument }) => instrument === previousPosition.instrument);
-            // If position existed but does not any more, it was closed
-            if (!currentPosition) return true;
-            // If position size's sign changed, position was switched (long to short or opposite),
-            // which equals closing an existing and opening a new position
-            if (Math.sign(currentPosition.size) !== Math.sign(previousPosition.size)) return true;
-            return false;
-        });
+        // Group positions for *one bar* together by instrument.
+        const positionsGroupedByInstrument = groupBy(
+            entry.positions,
+            ({ instrument }) => instrument,
+        );
 
-        // This is all fake but works for slow positions. Use close price of opening day as open
-        // value (instead of open price) and close price of bar prior to close as close value.
-        // Dont include positions that are still open when backtest ends as they will probably not
-        // be closed on that date, but later.
-        // TODO: Fix; use open values of opening and closing day instead. We have to change
-        // results a lot for that.
-        const adjustedClosed = closed.map(closedPosition => ({
-            openDate: closedPosition.openDate,
-            closeDate: entry.date,
-            openValue: Math.abs(closedPosition.marginPrice * closedPosition.size),
-            closeValue: previous.result.positionValues.get(closedPosition.instrument),
-            instrument: closedPosition.instrument,
-        }));
+        // Positions for an instrument are closed if
+        // a) there is a position on open, but not not on close
+        // b) position switches long/short from open to close
+        const closedPositions = positionsGroupedByInstrument
+            .filter(([, positions]) => (
+                // There is only 1 position for that bar and instrument: If it's of type open,
+                // position was closed
+                (positions.length === 1 && positions[0].type === 'open') ||
+                // There are 2 positions for that bar and instrument: Check if it was reversed;
+                // there are no positions of size 0 or -0, we can ignore this case.
+                (positions.length === 2 &&
+                    Math.sign(positions[0].size) !== Math.sign(positions[1].size))
+            ))
+            // Only return an array of 'open' position types; always comes first in result for a
+            // given date
+            .map(([, positions]) => positions[0]);
 
-        return {
-            result: entry,
-            closed: [...previous.closed, ...adjustedClosed],
-        };
-    }, { result: { positions: [] }, closed: [] }).closed
+        // Re-format closed positions
+        const reformattedClosedPositions = closedPositions
+            .map(closedPosition => ({
+                bars: closedPosition.created.barsSince,
+                // Calculate value of position when it was opened; make sure we use the current size
+                // (for a fair comparison), as size might have changed over the position's livetime.
+                openValue: calculatePositionValue(
+                    closedPosition.size,
+                    closedPosition.created.price,
+                    closedPosition.created.price,
+                    closedPosition.created.marginPrice,
+                    closedPosition.created.pointValue,
+                    closedPosition.created.pointValue,
+                ),
+                closeValue: closedPosition.value,
+                instrument: closedPosition.instrument,
+            }));
+
+        return [...previouslyClosedPositions, ...reformattedClosedPositions];
+
+    }, [])
 
 );

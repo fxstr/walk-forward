@@ -1,11 +1,15 @@
 import executeOrders from './executeOrders.mjs';
-import getPositionsValues from './getPositionsValues.mjs';
 import createExpectedPositions from './createExpectedPositions.mjs';
 import getTradableAmount from './getTradableAmount.mjs';
 import getAmounts from './getAmounts.mjs';
 import createOrders from './createOrders.mjs';
 import filterRebalances from './filterRebalances.mjs';
 import logger from '../logger/logger.mjs';
+import mergePositions from './mergePositions.mjs';
+import mergeMultipleInstrumentPositions from './mergeMultipleInstrumentPositions.mjs';
+import updatePositions from './updatePositions.mjs';
+import updatePosition from './updatePosition.mjs';
+import calculateCost from './calculateCost.mjs';
 
 const { debug } = logger('WalkForward:tradeForDate');
 
@@ -16,17 +20,19 @@ const { debug } = logger('WalkForward:tradeForDate');
  *                                                the open price at date
  * @param {Map.<string, number>} closePrices      Closing prices; key is the instrument's name,
  *                                                value the clsoing price at date
- * @param {Map.<string, number>} instructionFieldPrices      Prices used to calculate order size
+ * @param {Map.<string, number>} instructionFieldPrices      Prices used to calculate order size;
+ *                                                usually close price, but might e.g be ATR or
+ *                                                stdDev for futures
  * @param {Object.<string, number>[]} instructionSet  Instructions for the given date; key is the
  *                                                instruction's name, value the instruction's value,
  *                                                e.g. [{ select, -1, weight: 5 }]
+ * @param {Map.<string, number>} pointValues      Point values at current time; key is instrument
+ *                                                name, value is point value
  * @param {number} options.investedRatio          Ratio of the total amount of money available
  *                                                that should be invested
  * @param {number} options.maxRatioPerInstrument  Maximum ratio of the total amount of money
  *                                                available that should be invested in one single
  *                                                instrument
- * @param {function} options.getPointValue        Function that takes instrument name as an argument
- *                                                and returns point value
  * @param {object[]} margins                      Margins for current date with one entry per
  *                                                instrument, each with instrument, date, margin
  *                                                (relative number)
@@ -41,87 +47,110 @@ export default (
     closePrices,
     instructionFieldPrices,
     instructionSet,
+    pointValues,
     {
         investedRatio,
         maxRatioPerInstrument,
-        getPointValue,
     },
     relativeMargins,
     previous,
 ) => {
 
-    // Set with all instrument names that are relevant for the current date (either have an
-    // instruction or a position or a price). Needed to get pointValues.
-    const allInstruments = new Set(
-        openPrices.keys(),
-        instructionSet.map(({ instrument }) => instrument),
-        previous.positions.map(({ instrument }) => instrument),
-    );
-    // Map.<string, number> with point value for every relevant instrument on current date
-    const pointValues = new Map(Array.from(allInstruments)
-        .map(instrument => [instrument, getPointValue(instrument, date)]));
 
-    // Execute orders (in the morning, when only open prices are known)
-    const { positions, cost } = executeOrders(
+    debug('%t >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>', date);
+
+    debug('%t: Open prices are %O', date, openPrices);
+
+    // OPEN: Update value of existing positions
+    // Update prices on existing positions before we merge previous and new positions together
+    // @type {object[]}
+    const positionsOnOpen = updatePositions(
+        // Only use positions of type close
+        previous.positions.filter(position => position.type === 'close'),
+        updatePosition,
+        false,
+        openPrices,
+        pointValues,
+    );
+
+    if (positionsOnOpen.length) debug('%t: Positions on open are %O', date, positionsOnOpen);
+
+
+
+    // AFTER OPEN: Trade to fulfill previous.orders; use open prices to do so
+    // Execute orders (in the morning, when open prices are known). This creates new positions –
+    // they must still be merged with the current ones
+    // @type {object[]}
+    const newPositions = executeOrders(
         // Use orders from previous close
         previous.orders,
         openPrices,
-        // Pass in previous positions
-        previous.positions,
-        date,
         relativeMargins,
         pointValues,
     );
-    const cash = previous.cash - cost;
 
-    if (positions.length) {
-        debug(
-            '%t: Created positions %O with cost %o for pointValues %o',
-            date,
-            positions,
-            cost,
-            pointValues,
-        );
+    if (newPositions.length) {
+        debug('%t: New positions are %O', date, newPositions);
+        debug('%t: Relative margins are %O', date, relativeMargins);
     }
 
-    // Get values of all positions (in the evening when close prices are known); value is needed
-    // to calculate orders for next day.
-    const positionValues = getPositionsValues(
+    // Merge previous with new positions
+    // @type {object[]}
+    const positions = mergeMultipleInstrumentPositions(
+        [...positionsOnOpen, ...newPositions],
+        mergePositions,
+    );
+    if (positions.length) debug('%t: Merged positions are %O', date, positions);
+
+
+    // Find out how much money was used to create the new positions.
+    // type {number}
+    const cost = calculateCost(positions, positionsOnOpen);
+    const cash = previous.cash - cost;
+    debug('%t: Previous cash was %d, cost is %d, new cash is %d', date, previous.cash, cost, cash);
+
+
+
+    // CLOSE: Update prices for all positions
+    const positionsOnClose = updatePositions(
         positions,
-        previous.positionValues,
+        updatePosition,
+        true,
         closePrices,
         pointValues,
     );
-
-    if (positionValues.size) {
-        debug(
-            '%t: Current position values are %o',
-            date,
-            positionValues,
-        );
+    if (positionsOnClose.length) {
+        debug('%t: Closing prices are %O, pointValues %O', date, closePrices, pointValues);
+        debug('%t: Positions on close are %O', date, positionsOnClose);
     }
 
-    const allPositionsValue = Array
-        .from(positionValues.values())
-        .reduce((sum, value) => sum + value, 0);
+
+
+    // AFTER CLOSE: Generate orders for next bar
+    const allPositionsValue = positionsOnClose.reduce((sum, { value }) => sum + value, 0);
 
     // Ignore instructions that are have a current position and are not rebalanced
-    const validInstructions = filterRebalances(instructionSet, positions);
+    const tradedInstructions = filterRebalances(instructionSet, positionsOnClose);
+    if (tradedInstructions.length) {
+        debug('%t: Instructions traded on current bar are %O', date, tradedInstructions);
+    }
 
-    // Get value sum of all positions that may be traded on the current bar
-    const valueOfTradingPositions = getTradableAmount(
-        validInstructions,
-        positionValues,
+    // Get value sum of all positions that may be traded (rebalanced, created or closed) on the
+    // current bar
+    const valueOfCurrentlyTradingPositions = getTradableAmount(
+        tradedInstructions,
+        positionsOnClose,
     );
 
     // Get amount that is available for trading
     const { maxAmount, maxAmountPerInstrument } = getAmounts(
         cash,
-        valueOfTradingPositions,
+        valueOfCurrentlyTradingPositions,
         allPositionsValue,
         investedRatio,
         maxRatioPerInstrument,
     );
+    debug('%t: Max amount is %d, per instrument %d', date, maxAmount, maxAmountPerInstrument);
 
     // Create expected positions for next bar. Sizes are absolute (-28 means that we should be
     // 28 total short, not add another short position of 28).
@@ -129,30 +158,41 @@ export default (
     // the positions amoung the amount available and do not have to care about positions getting
     // larger or smaller (and thereby freeing money).
     const expectedPositions = createExpectedPositions(
-        validInstructions,
+        tradedInstructions,
         instructionFieldPrices,
         maxAmount,
         maxAmountPerInstrument,
         pointValues,
     );
+    if (expectedPositions.size) {
+        debug(
+            '%t: Expected positions are %O, instruction field prices %O, pointValues %O',
+            date,
+            expectedPositions,
+            instructionFieldPrices,
+            pointValues,
+        );
+    }
 
 
     // Map.<string, number> where key is the instrument name and value the current position size
-    const currentPositions = new Map(positions.map(position =>
+    const currentPositions = new Map(positionsOnClose.map(position =>
         [position.instrument, position.size]));
+
 
     // Map.<string, number> where key is the instrument name and value is the order size. Ignore
     // all orders that have existed previously but were not executed.
     const orders = createOrders(expectedPositions, currentPositions);
-
     if (orders.size) debug('%t: Orders are %O', date, orders);
+
+
+    debug('%t <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<', date);
 
 
     return {
         date,
-        positions,
+        positions: [...positionsOnOpen, ...positionsOnClose],
         orders,
-        positionValues,
         cash,
     };
 

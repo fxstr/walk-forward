@@ -1,5 +1,3 @@
-import getClosedPositions from './getClosedPositions.mjs';
-
 /**
  * Calculates and returns position related performance indicators
  * @param  {object[]} closedPositions    Objects with instrument, openDate, closeDate, openValue,
@@ -26,10 +24,8 @@ export default (closedPositions) => {
     const numberOfLosingPositions = losingPositions.length;
     const percentProfitable = numberOfWinningPositions / numberOfPositions;
 
-    const dayInMs = 1000 * 60 * 60 * 24;
-    const cumulatedTime = closedPositions
-        .reduce((sum, position) => sum + (position.closeDate - position.openDate), 0);
-    const averageHoldingTimeInDays = cumulatedTime / numberOfPositions / dayInMs;
+    const averageBarsHeld = closedPositions.reduce((sum, { bars }) => sum + bars, 0) /
+        closedPositions.length;
 
     const grossProfit = winningPositions
         .reduce((sum, position) => sum + (position.closeValue - position.openValue), 0);
@@ -51,7 +47,7 @@ export default (closedPositions) => {
         numberOfWinningPositions,
         numberOfLosingPositions,
         percentProfitable,
-        averageHoldingTimeInDays,
+        averageBarsHeld,
         grossProfit,
         grossLoss,
         profitFactor,
@@ -73,8 +69,8 @@ export default (closedPositions) => {
 // avg winning amount?
 
 // avg holding time
-// avg exposure
-// % time in market
+// TODO: avg exposure
+// TODO: % time in market
 
 // gross profit
 // gross loss

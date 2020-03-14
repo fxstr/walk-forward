@@ -2,6 +2,8 @@ import test from 'ava';
 import trade from './trade.mjs';
 import createTestData from '../testData/createTestData.mjs';
 import walkStructure from '../dataHelpers/walkStructure.mjs';
+import createTestResultData from '../testData/createTestResultData.mjs';
+
 
 const createInstruction = (instrument, day, selected = 1, weight = 1) => ({
     instrument,
@@ -12,33 +14,15 @@ const createInstruction = (instrument, day, selected = 1, weight = 1) => ({
 });
 
 
+
 test('throws on invalid capital', (t) => {
     t.throws(() => trade(undefined, false), /capital that is a number/);
 });
 
 
 test('converts data for trade as expected', (t) => {
-    const { data } = createTestData();
 
-    // Update/overwrite instructions
-    const findInstructionIndex = (instrument, date) => item => item.date === date &&
-        item.instrument === instrument;
-    [
-        createInstruction('aapl', 1, -1, 2),
-        createInstruction('amzn', 2, 1, 3),
-        createInstruction('aapl', 2, -1, 2),
-        // Select 0 closes position
-        createInstruction('aapl', 4, 0),
-    ].forEach((item) => {
-        const index = data.instructions.findIndex(findInstructionIndex(item.instrument, item.date));
-        if (index === -1) throw new Error(`trade.unit: Index not found for ${JSON.stringify(item)}`);
-        data.instructions[index] = item;
-    });
-
-    data.configuration.investedRatio = 0.9;
-    data.configuration.maxRatioPerInstrument = 0.8;
-
-    const { result } = trade(data, 1000);
+    const { result } = createTestResultData();
 
     // Jan 1
     t.deepEqual(result[0], {
@@ -46,24 +30,28 @@ test('converts data for trade as expected', (t) => {
         positions: [],
         // aapl closed at 14.1, cash is 1000*0.8
         orders: new Map([['aapl', -56]]),
-        positionValues: new Map(),
         cash: 1000,
     });
 
     // Jan 2
     // Short 56 aapl@13.9 in the morning
-    const jan2 = new Date(2019, 0, 2, 0, 0, 0).getTime();
     t.deepEqual(result[1], {
-        date: jan2,
+        date: new Date(2019, 0, 2, 0, 0, 0).getTime(),
+        // Position did not exist on open in the morning – only close is avaialble
         positions: [{
             instrument: 'aapl',
             size: -56,
-            openDate: jan2,
-            openPrice: 13.9,
-            marginPrice: 13.9,
+            type: 'close',
+            value: (13.9 + 0.8) * 56, // closes@13.1
+            created: {
+                barsSince: 0,
+                price: 13.9,
+                marginPrice: 13.9,
+                pointValue: 1,
+            },
         }],
         // aapl opened@13.9, close@13.1, +0.8/instrument = 56 * (13.9 + 0.8) = 823.2
-        positionValues: new Map([['aapl', 56 * (13.9 + 0.8)]]),
+        // positionValues: new Map([['aapl', 56 * (13.9 + 0.8)]]),
         // Shorted 63 aapl@13.9 = 875.7
         cash: 1000 - (13.9 * 56),
         // total amount: 1050.4
@@ -77,29 +65,53 @@ test('converts data for trade as expected', (t) => {
 
     // Jan 3
     // Only data for amzn is available
-    const jan3 = new Date(2019, 0, 3, 0, 0, 0).getTime();
     t.deepEqual(result[2], {
-        date: jan3,
+        date: new Date(2019, 0, 3, 0, 0, 0).getTime(),
         positions: [
             // aapl stays the same, no data available for today
             {
                 instrument: 'aapl',
                 size: -56,
-                openDate: jan2,
-                openPrice: 13.9,
-                marginPrice: 13.9,
+                type: 'open',
+                value: (13.9 + 0.8) * 56,
+                created: {
+                    // No data for today – does not count as a bar
+                    barsSince: 0,
+                    price: 13.9,
+                    marginPrice: 13.9,
+                    pointValue: 1,
+                },
             },
-            // Bought 25 amzn@21.8
+            // aapl close
+            {
+                instrument: 'aapl',
+                size: -56,
+                type: 'close',
+                value: (13.9 + 0.8) * 56,
+                created: {
+                    // No data for today – does not count as a bar
+                    barsSince: 0,
+                    price: 13.9,
+                    marginPrice: 13.9,
+                    pointValue: 1,
+                },
+            },
+            // amzn close: Bought 25 amzn@21.8, closes@22
             {
                 instrument: 'amzn',
                 size: 25,
-                openDate: jan3,
-                openPrice: 21.8,
-                marginPrice: 21.8,
+                type: 'close',
+                value: 25 * 22,
+                created: {
+                    barsSince: 0,
+                    price: 21.8,
+                    marginPrice: 21.8,
+                    pointValue: 1,
+                },
             },
         ],
         // Aapl unchanged, amzn 25@22 (evening)
-        positionValues: new Map([['aapl', 823.2], ['amzn', 25 * 22]]),
+        // positionValues: new Map([['aapl', 823.2], ['amzn', 25 * 22]]),
         // Had 221.6, bought 25 amzn@21.8 = 545
         cash: 221.6 - (25 * 21.8),
         // aapl did not have any data available, is therefore removed
@@ -108,42 +120,118 @@ test('converts data for trade as expected', (t) => {
     });
 
     // Jan 4
-    // aapl and amzn will be executed; cancel order for aapl is generated
-    const jan4 = new Date(2019, 0, 4, 0, 0, 0).getTime();
+    // aapl and amzn will be executed; reverse order for aapl is generated
     t.deepEqual(result[3], {
-        date: jan4,
+        date: new Date(2019, 0, 4, 0, 0, 0).getTime(),
         positions: [
             // aapl stays
             {
                 instrument: 'aapl',
                 size: -56,
-                openDate: jan2,
-                openPrice: 13.9,
-                marginPrice: 13.9,
+                type: 'open',
+                // aapl shorted @13.9, now at 14.1 (loss 0.2/instrument)
+                value: 56 * (13.9 - 0.2),
+                created: {
+                    barsSince: 1,
+                    price: 13.9,
+                    marginPrice: 13.9,
+                    pointValue: 1,
+                },
+            },
+            // amzn position is still open on open
+            {
+                instrument: 'amzn',
+                size: 25,
+                type: 'open',
+                // 25 amzn@21.6
+                value: 25 * 21.6,
+                created: {
+                    barsSince: 1,
+                    price: 21.8,
+                    marginPrice: 21.8,
+                    pointValue: 1,
+                },
+            },
+            // amzn was completely sold; on close, there is only aapl
+            {
+                instrument: 'aapl',
+                size: -56,
+                type: 'close',
+                // aapl shorted @13.9, now at 14.3 (loss 0.4/instrument)
+                value: 56 * (13.9 - 0.4),
+                created: {
+                    barsSince: 1,
+                    price: 13.9,
+                    marginPrice: 13.9,
+                    pointValue: 1,
+                },
             },
         ],
-        // aapl shorted @13.9, now at 14.3 (loss 0.4/instrument), amzn 25@22.3 (evening)
-        positionValues: new Map([['aapl', 56 * (13.9 - 0.4)]]),
         // Had -323.4, sold 25 amzn@21.6
         cash: -323.4 + (25 * 21.6),
-        // Select 0 on aapl closes position
-        orders: new Map([['aapl', 56]]),
+        // Switch aapl position to long. Cash is 216.6, money in aapl is 56 * (13.9 - 0.4) = 756,
+        // total is 972.6. Max per instrument is 0.8 = 778.08. aapl is at 14.3 = 54.
+        // Was 56 short, becomes 54 long = +110
+        orders: new Map([['aapl', 110]]),
     });
 
     // Jan 5: No data
 
     // Jan 6
-    // Close aapl, close amzn
-    const jan6 = new Date(2019, 0, 6, 0, 0, 0).getTime();
+    // Revert aapl
     t.deepEqual(result[4], {
-        date: jan6,
-        // Positions are EMPTY
-        positions: [],
-        positionValues: new Map(),
-        // 216.6 from previous + covered 56 aapl@13.4 (from 13.9, gain 0.5/instrument); makes
-        // 56 * (13.9 + 0.5) = 806.4
-        cash: 1023,
-        // Cover aapl
+        date: new Date(2019, 0, 6, 0, 0, 0).getTime(),
+        // Positions are empty only on close
+        positions: [{
+            instrument: 'aapl',
+            type: 'open',
+            size: -56,
+            // Shorted 56@13.9, now at 13.4, gain 0.5
+            value: 56 * (13.9 + 0.5),
+            created: {
+                barsSince: 2,
+                price: 13.9,
+                marginPrice: 13.9,
+                pointValue: 1,
+            },
+        }, {
+            instrument: 'aapl',
+            type: 'close',
+            size: 54,
+            // Shorted 56@13.9, now at 13.4, gain 0.5
+            value: 54 * 13.6,
+            created: {
+                barsSince: 0,
+                price: 13.4,
+                marginPrice: 13.4,
+                pointValue: 1,
+            },
+        }],
+        // 216.6 from previous; covered 56 aapl@13.4 (from 13.9); bought 54 aapl@13.4
+        cash: 299.4,
+        orders: new Map([['aapl', -54]]),
+    });
+
+    // Jan 7
+    // aapl closed
+    t.deepEqual(result[5], {
+        date: new Date(2019, 0, 7, 0, 0, 0).getTime(),
+        // Positions are empty only on close
+        positions: [{
+            instrument: 'aapl',
+            type: 'open',
+            size: 54,
+            // Shorted 56@13.9, now at 13.4, gain 0.5
+            value: 54 * 13.4,
+            created: {
+                barsSince: 1,
+                price: 13.4,
+                marginPrice: 13.4,
+                pointValue: 1,
+            },
+        }],
+        // 216.6 from previous; sold 54 aapl@13.4
+        cash: 299.4 + (54 * 13.4),
         orders: new Map(),
     });
 
@@ -170,7 +258,8 @@ test('respects rebalance instructions', (t) => {
 
     const { result } = trade(data, 1000);
     // aapl positions are exactly the same on jan 1 as on jan 2
-    t.deepEqual(result[1].positions[0], result[2].positions[0]);
+    // [2][0] is open; to equal first, we must modify type to 'close'.
+    t.deepEqual(result[1].positions[0], { ...result[2].positions[0], type: 'close' });
 
 });
 
@@ -195,14 +284,18 @@ test('works with margins', (t) => {
     t.deepEqual(result[1].positions, [{
         instrument: 'aapl',
         size: -70,
-        openDate: jan2,
-        openPrice: 13.9,
-        marginPrice: 13.9 * 0.6,
+        type: 'close',
+        // Shorted 70 @ 13.9, is @13.1, gain 0.8/instrument = 56
+        // Price paid was 13.9 * 0.6 * 70 = 583.8
+        value: 56 + 583.8,
+        created: {
+            barsSince: 0,
+            price: 13.9,
+            marginPrice: 13.9 * 0.6,
+            pointValue: 1,
+        },
     }]);
     t.is(result[1].cash, 1000 - (70 * 13.9 * 0.6));
-    // Shorted 70 @ 13.9, is @13.1, gain 0.8/instrument = 56
-    // Price paid was 13.9 * 0.6 * 70 = 583.8
-    t.deepEqual(result[1].positionValues, new Map([['aapl', 56 + 583.8]]));
 
 });
 
@@ -217,21 +310,24 @@ test('uses instructionField', (t) => {
 
     const { result } = trade(data, 1000);
 
-    const jan2 = new Date(2019, 0, 2, 0, 0, 0).getTime();
     // Evening of Jan 1: 1000 / 0.2 (atr) = 5000
     // Short 5000 aapl@13.9 in the morning
     t.deepEqual(result[1].positions, [{
         instrument: 'aapl',
         size: -5000,
-        openDate: jan2,
-        openPrice: 13.9,
-        marginPrice: 13.9,
+        // Shorted 5000 @ 13.9, is @13.1, gain 0.8/instrument = 4000
+        // Price paid was 13.9 * 5000 = 69500
+        value: 4000 + 69500,
+        type: 'close',
+        created: {
+            barsSince: 0,
+            price: 13.9,
+            marginPrice: 13.9,
+            pointValue: 1,
+        },
     }]);
     // Shorted 5000 @ 13.9
     t.is(result[1].cash, 1000 - (5000 * 13.9));
-    // Shorted 5000 @ 13.9, is @13.1, gain 0.8/instrument = 4000
-    // Price paid was 13.9 * 5000 = 69500
-    t.deepEqual(result[1].positionValues, new Map([['aapl', 4000 + 69500]]));
 
 });
 
@@ -239,7 +335,6 @@ test('uses instructionField', (t) => {
 
 test('uses getPointValue', (t) => {
     const { data } = createTestData();
-    const jan2 = new Date(2019, 0, 2, 0, 0, 0).getTime();
 
     // Add field atr on aapl jan 2
     data.instructions[0] = createInstruction('aapl', 1, -1, 2);
@@ -252,16 +347,20 @@ test('uses getPointValue', (t) => {
     t.deepEqual(result[1].positions, [{
         instrument: 'aapl',
         size: -17,
-        openDate: jan2,
-        openPrice: 13.9 * 4,
-        marginPrice: 13.9 * 4,
+        // Shorted 17 @ 13.9 * 4, is @13.1 * 4, gain 3.2/instrument = 54.4
+        // Price paid was 17 * 13.9 * 4 = 945.2
+        // JS numbers …
+        value: 999.6000000000001,
+        type: 'close',
+        created: {
+            barsSince: 0,
+            price: 13.9,
+            marginPrice: 13.9,
+            pointValue: 4,
+        },
     }]);
     // Shorted 17 @ 13.9 * 4
     t.is(result[1].cash, 1000 - (17 * 13.9 * 4));
-    // Shorted 17 @ 13.9 * 4, is @13.1 * 4, gain 3.2/instrument = 54.4
-    // Price paid was 17 * 13.9 * 4 = 945.2
-    // JS numbers …
-    t.deepEqual(result[1].positionValues, new Map([['aapl', 999.6000000000001]]));
 
 });
 

@@ -3,7 +3,8 @@ import groupBy from '../dataHelpers/groupBy.mjs';
 import tradeForDate from './tradeForDate.mjs';
 import logger from '../logger/logger.mjs';
 import spinner from '../spinner/spinner.mjs';
-import createMargins from './calculateMargins.mjs';
+import calculateMargins from './calculateMargins.mjs';
+import getPointValuesForDate from './getPointValuesForDate.mjs';
 
 const { debug } = logger('WalkForward:trade');
 
@@ -14,10 +15,7 @@ const { debug } = logger('WalkForward:trade');
  *                          following properties
  *                          - cash (number): the amount of money not invested
  *                          - orders (Map): key is the instrument's name, value the order size
- *                          - positions (object[]): properties instrument, size (negative for a
- *                            short position), openDate, openPrice, marginPrice
- *                          - positionValues (Map): key is the instrument's name, value the
- *                            position's value
+ *                          - positions (object[]): properties see createPosition
  */
 export default (data, capital) => {
 
@@ -53,8 +51,9 @@ export default (data, capital) => {
 
         // Get instructions for current date
         const instructionSet = instructionsGroupedByDate.get(date);
-        // Get current margins, transform to Map.<string, number>
-        const relativeMargins = createMargins(
+
+        // Get current relative margins (0–1), transform to Map.<string, number>
+        const relativeMargins = calculateMargins(
             timeSeriesEntries,
             data.instrumentKey,
             data.configuration.getMargin,
@@ -68,6 +67,8 @@ export default (data, capital) => {
         // Map with key: instrumentName, value: opening/closing price
         const openPrices = getPriceType(timeSeriesEntries, 'open');
         const closePrices = getPriceType(timeSeriesEntries, 'close');
+        // Prices for the field that is used to generate order sizes from instruction's weight
+        // (e.g. ATR for futures).
         const instructionFieldPrices = getPriceType(
             timeSeriesEntries,
             data.configuration.instructionField,
@@ -75,18 +76,24 @@ export default (data, capital) => {
 
         const previousEntry = previous.slice(-1).pop();
 
+        const pointValues = getPointValuesForDate(
+            timeSeriesEntries.map(entry => entry.get(data.instrumentKey)),
+            data.configuration.getPointValue,
+            date,
+        );
+
         const result = tradeForDate(
             date,
             openPrices,
-            closePrices,
+            closePrices, // Remove
             instructionFieldPrices,
             instructionSet,
+            pointValues,
             // Configuration
             // Map properties to make sure it will also work when we change the naming
             {
                 investedRatio: data.configuration.investedRatio,
                 maxRatioPerInstrument: data.configuration.maxRatioPerInstrument,
-                getPointValue: data.configuration.getPointValue,
             },
             relativeMargins,
             // Previous data
@@ -94,7 +101,6 @@ export default (data, capital) => {
                 orders: previousEntry.orders,
                 positions: previousEntry.positions,
                 cash: previousEntry.cash,
-                positionValues: previousEntry.positionValues,
             },
         );
 
@@ -104,21 +110,16 @@ export default (data, capital) => {
 
     }, [{
         cash: capital,
-        positionValues: new Map(),
         // Orders are executed on open, where they are taken as 'left overs' from the previous
         // close; therefore, let's start with an empty order from the bar *before* we started
         // our trades
         orders: new Map(),
-        // Array of orders, see createOrder.mjs
+        // Array of positions for current date
         positions: [],
+        date: null,
     }]);
 
-    debug(
-        'Trades executed, final amount is %d',
-        tradeResult.cash + Array
-            .from(tradeResult.slice(-1).pop().positionValues.values())
-            .reduce((prev, value) => prev + value, 0),
-    );
+    debug('Trades executed.');
 
     const endTime = performance.now();
     const totalTime = Math.round(endTime - startTime);

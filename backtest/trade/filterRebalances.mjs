@@ -13,6 +13,8 @@ export default (instructions, previousPositions) => (
         // If rebalance is true, we're gonna trade even if there was a position
         if (instruction.rebalance) return true;
 
+        // We're also going to trade the instrument if the position direction changes (from short
+        // to long/opposite, if it's closed or opened) even if we're not rebalancing
         const previousPosition = previousPositions
             .find(position => position.instrument === instruction.instrument);
         const previousSize = (previousPosition && previousPosition.size) || 0;

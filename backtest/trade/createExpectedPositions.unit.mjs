@@ -120,9 +120,27 @@ test('does not create position if instructionFieldPrice is not available', (t) =
             new Map([['test', undefined]]),
             1000,
             1000,
-            new Map([['test', 40]]),
         ),
-        // 1000 total, 1 test costs 40 * 2 = 80, makes 12.5
         new Map(),
     );
 });
+
+
+test('does not reserve money for selected 0', (t) => {
+    t.deepEqual(
+        createExpectedPositions(
+            [
+                // No money is reserved for this position that will be closed
+                createInstruction(true, 0, 'unselected'),
+                createInstruction(true, 1, 'test'),
+            ],
+            new Map([['test', 17], ['unselected', 3]]),
+            1000,
+            1000,
+        ),
+        // 1000 total, unselected is not traded; test costs 17 → 58
+        new Map([['unselected', 0], ['test', 58]]),
+    );
+});
+
+

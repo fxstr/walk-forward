@@ -13,13 +13,13 @@ test('creates expected output', (t) => {
     aaplInstructions[0].weight = 2.5;
     aaplInstructions[0].rebalance = false;
     data.result = [{
-        positionValues: new Map([['aapl', 3.5]]),
         orders: new Map([['aapl', -3]]),
         // Date must match date of timeSeries entries
         date: new Date(2019, 0, 1, 0, 0, 0).getTime(),
         positions: [{
             instrument: 'aapl',
             size: 5,
+            value: 3.5,
         }],
     }];
 

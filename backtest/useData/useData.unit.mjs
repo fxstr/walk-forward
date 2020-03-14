@@ -46,7 +46,7 @@ test('returns correctly formatted data', (t) => {
     // instrumentKey
     t.is(typeof data.instrumentKey === 'symbol', true);
 
-    // timeSeries – sorted by date/instrument
+    // timeSeries – sorted by date/instrument
     t.deepEqual(data.timeSeries, [new Map([
         ['date', 1],
         ['open', 2.12],

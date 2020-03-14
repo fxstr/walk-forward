@@ -21,8 +21,11 @@ export default (
     pointValues = new Map(),
 ) => {
 
-    // Get sum of all weights
-    const totalWeight = instructions.reduce((sum, { weight }) => sum + weight, 0);
+    // Get sum of all weights; if selected is 0, don't count weight, no money will be needed to
+    // change this position (as it is freed)
+    const totalWeight = instructions.reduce((sum, { weight, selected }) => (
+        sum + (weight * Math.abs(selected))
+    ), 0);
 
     const newPositions = instructions
         // instructionField may not yet have been calculated (e.g. for an ATR(50) if position is
@@ -33,8 +36,10 @@ export default (
             instruction.instrument,
             // 2nd entry is amount to be invested in this instrument
             // If totalWeight is 0, use 0; we cannot divide by it.
+            // If instruction.selected is 0, don't reserve money for this instrument; only do so
+            // if selected is 1 or -1.
             totalWeight === 0 ? 0 : Math.min(
-                (instruction.weight / totalWeight) * maxAmount,
+                (instruction.weight / totalWeight) * maxAmount * Math.abs(instruction.selected),
                 maxAmountPerInstrument,
             ),
             instruction,

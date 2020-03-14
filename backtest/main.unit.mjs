@@ -3,7 +3,7 @@ import * as walkForward from './main.mjs';
 
 test('creates all exports', (t) => {
     [
-        'createStrategy',
+        'createBacktest',
         'readCSV',
         'talibIndicator',
         'convertInstrumentToHighstock',

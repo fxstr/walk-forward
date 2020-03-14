@@ -1,8 +1,8 @@
 import test from 'ava';
-import createStrategy from './createStrategy.mjs';
+import createBacktest from './createBacktest.mjs';
 
 test('provides all methods', (t) => {
-    const strategy = createStrategy();
+    const strategy = createBacktest();
     const methods = [
         'useData',
         'addIndicator',
@@ -16,19 +16,20 @@ test('provides all methods', (t) => {
         'rebalance',
         'truncate',
         'do',
+        'calculatePerformance',
     ];
 
     // Necessary methods
     methods.forEach((method) => {
         if (!Object.prototype.hasOwnProperty.call(strategy, method)) {
-            t.fail(`Method ${method} not found in createStrategy`);
+            t.fail(`Method ${method} not found in createBacktest`);
         }
     });
 
     // Unexpected methods
     Object.keys(strategy).forEach((method) => {
         if (!methods.includes(method)) {
-            t.fail(`Method ${method} is unexpected on createStrategy`);
+            t.fail(`Method ${method} is unexpected on createBacktest`);
         }
     });
 
