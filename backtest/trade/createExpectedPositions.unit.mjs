@@ -76,11 +76,12 @@ test('works with negative orders', (t) => {
     t.deepEqual(
         createExpectedPositions(
             [createInstruction(true, -1)],
-            new Map([['test', 2]]),
+            new Map([['test', 3]]),
             100,
             100,
         ),
-        new Map([['test', -50]]),
+        // Make sure -33.3333 is rounded down
+        new Map([['test', -33]]),
     );
 });
 

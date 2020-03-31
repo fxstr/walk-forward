@@ -10,8 +10,7 @@ export default (data, path, getDataFunction) => {
     const startTime = performance.now();
     const output = spinner(`Writing file ${path} …`);
 
-    debug('Write file to %s.', path, data, getDataFunction);
-    debug('Execute getDataFunction for data %o', data);
+    debug('Write file to %s', path);
 
     const dataToWrite = getDataFunction(data);
     // We cannot nicely format JSON as this will break EventSource in frontend (newline mean a

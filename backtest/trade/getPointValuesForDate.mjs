@@ -11,6 +11,12 @@ export default (instruments, getPointValueFunction, date) => (
 
     // Map.<string, number> with point value for every relevant instrument on current date
     new Map(instruments
-        .map(instrument => [instrument, getPointValueFunction(instrument, date)]))
+        .map((instrument) => {
+            const pointValue = getPointValueFunction(instrument, date);
+            if (typeof pointValue !== 'number' && pointValue !== undefined) {
+                throw new Error(`getPointValuesForDate: pointValue must be undefined or a number, is ${JSON.stringify(pointValue)} instead.`);
+            }
+            return [instrument, pointValue];
+        }))
 
 );

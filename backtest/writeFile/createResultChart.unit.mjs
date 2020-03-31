@@ -1,27 +1,13 @@
 import test from 'ava';
 import createResultChart from './createResultChart.mjs';
-import createTestData from '../testData/createTestData.mjs';
+import createTestResultData from '../testData/createTestResultData.mjs';
 
 test('works with empty results', (t) => {
     t.deepEqual(createResultChart(), { panel: new Map(), series: [] });
 });
 
 test('creates expected output', (t) => {
-    const { data } = createTestData();
-    const aaplInstructions = data.instructions.filter(({ instrument }) => instrument === 'aapl');
-    aaplInstructions[0].selected = -1;
-    aaplInstructions[0].weight = 2.5;
-    aaplInstructions[0].rebalance = false;
-    data.result = [{
-        orders: new Map([['aapl', -3]]),
-        // Date must match date of timeSeries entries
-        date: new Date(2019, 0, 1, 0, 0, 0).getTime(),
-        positions: [{
-            instrument: 'aapl',
-            size: 5,
-            value: 3.5,
-        }],
-    }];
+    const data = createTestResultData();
 
     const result = createResultChart(data.result, data.instructions, 'aapl');
 
@@ -30,11 +16,17 @@ test('creates expected output', (t) => {
     const resultPanel = 'resultPanel';
     const positionValuesPanel = 'positionValuesPanel';
 
+
     t.deepEqual(result, {
         series: [
             // Position Sizes
             {
-                data: [createEntry(1, 5)],
+                data: [
+                    createEntry(2, -56),
+                    createEntry(3, -56),
+                    createEntry(4, -56),
+                    createEntry(6, 54),
+                ],
                 yAxis: resultPanel,
                 type: 'column',
                 name: 'Positions',
@@ -42,14 +34,28 @@ test('creates expected output', (t) => {
             // Position Values
             {
                 // First relative position value is always 1
-                data: [createEntry(1, 1)],
+                data: [
+                    createEntry(2, (13.9 + 0.8) / 13.9),
+                    createEntry(3, (13.9 + 0.8) / 13.9),
+                    // JS fucks up rounding when we don't use 56
+                    createEntry(4, (56 * (13.9 - 0.4)) / (56 * 13.9)),
+                    createEntry(6, 13.6 / 13.4),
+                ],
                 yAxis: positionValuesPanel,
                 type: 'column',
                 name: 'Relative Position Value',
             },
             // Orders
             {
-                data: [createEntry(1, -3)],
+                data: [
+                    createEntry(1, -56),
+                    // Total money is 1044, invested ratio 0.9, weight of aapl is 2 (of 5)
+                    // Makes (1044 * 0.9) * (2 / 5) = 375.84, close is 13.1 makes 28
+                    createEntry(2, 28),
+                    createEntry(4, 110),
+                    // Close aapl
+                    createEntry(6, -54),
+                ],
                 yAxis: resultPanel,
                 lineWidth: 0,
                 marker: {
@@ -67,8 +73,8 @@ test('creates expected output', (t) => {
             {
                 data: [
                     createEntry(1, -1),
-                    createEntry(2, 0),
-                    createEntry(4, 0),
+                    createEntry(2, -1),
+                    createEntry(4, 1),
                     createEntry(6, 0),
                     createEntry(7, 0),
                 ],
@@ -79,8 +85,8 @@ test('creates expected output', (t) => {
             // Weight
             {
                 data: [
-                    createEntry(1, 2.5),
-                    createEntry(2, 1),
+                    createEntry(1, 2),
+                    createEntry(2, 2),
                     createEntry(4, 1),
                     createEntry(6, 1),
                     createEntry(7, 1),
@@ -92,7 +98,7 @@ test('creates expected output', (t) => {
             // Rebalance
             {
                 data: [
-                    createEntry(1, 0),
+                    createEntry(1, 1),
                     createEntry(2, 1),
                     createEntry(4, 1),
                     createEntry(6, 1),

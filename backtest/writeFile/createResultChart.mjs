@@ -1,3 +1,5 @@
+import calculatePositionValue from '../trade/calculatePositionValue.mjs';
+
 /**
  * Exports results (positions, orders) and instructions(weight, selected, trade) for an instrument
  * as a Highstock chart.
@@ -16,14 +18,31 @@ export default (results, instructions, instrumentName) => {
 
     // Get result data for current instrument; filter by dates that contain a position for the
     // given instrument
-    const positionSizes = results
-        .filter(({ positions }) => positions
-            .find(position => position.instrument === instrumentName))
+    const positionForInstrument = results
         .map(result => [
             result.date,
-            // As all results were filtered by such ones with positions for the current instrument,
-            // we can safely access its size.
-            result.positions.find(position => position.instrument === instrumentName).size || 0,
+            // Use close type as positions have not been modified on open
+            result.positions.find(({ instrument, type }) => instrument === instrumentName
+                && type === 'close'),
+        ])
+        // Remove all positions without data for the current instrument
+        .filter(([, position]) => !!position);
+
+
+    const positionSizes = positionForInstrument.map(([date, { size }]) => [date, size]);
+
+    const positionValues = positionForInstrument
+        .map(([date, position]) => [
+            date,
+            // Calculate original price (for current size) based on position data
+            position.value / calculatePositionValue(
+                position.size,
+                position.created.price,
+                position.created.price,
+                position.created.marginPrice,
+                position.created.pointValue,
+                position.created.pointValue,
+            ),
         ]);
 
     const orderData = results
@@ -34,43 +53,7 @@ export default (results, instructions, instrumentName) => {
         ]);
 
 
-    // Get relative position values; base is the *close* price of the first bar the position was
-    // created (1.0). Subsequent *close* prices (see tradeForDate) set in relation to it.
-    const positionValues = results
-        .reduce((previous, result) => {
-            const latest = previous.slice(-1).pop() || {};
-            // Get current position value
-            const currentPosition = result.positions
-                .find(({ instrument }) => instrument === instrumentName);
-            const currentValue = currentPosition ? currentPosition.value : 0;
-            // We divide the position value by the position size so
-            // that relativeValue does not grow when positions are enlarged.
-            const currentPositionSize = currentPosition ? currentPosition.size : 0;
-            const positionValueAdjustedForSize = currentValue / currentPositionSize;
-            let relativeValue;
-            if (currentPositionSize === 0) {
-                relativeValue = 0;
-            }
-            // Start with relativeValue 1 if we just opened the position in the current direction
-            else if (Math.sign(latest.adjustedAbsoluteValue) !==
-                Math.sign(positionValueAdjustedForSize)) {
-                relativeValue = 1;
-            }
-            // Use relative value if position was already open
-            else {
-                relativeValue = latest.relativeValue *
-                    (positionValueAdjustedForSize / latest.adjustedAbsoluteValue);
-            }
-            return [...previous, {
-                date: result.date,
-                relativeValue,
-                adjustedAbsoluteValue: positionValueAdjustedForSize,
-            }];
-        }, [])
-        .map(result => [
-            result.date,
-            result.relativeValue,
-        ]);
+
 
 
     const instructionDataForInstrument = instructions

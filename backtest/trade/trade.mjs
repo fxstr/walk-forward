@@ -76,6 +76,7 @@ export default (data, capital) => {
 
         const previousEntry = previous.slice(-1).pop();
 
+        // @type Map.<string, number>
         const pointValues = getPointValuesForDate(
             timeSeriesEntries.map(entry => entry.get(data.instrumentKey)),
             data.configuration.getPointValue,

@@ -10,6 +10,10 @@ import mergeMultipleInstrumentPositions from './mergeMultipleInstrumentPositions
 import updatePositions from './updatePositions.mjs';
 import updatePosition from './updatePosition.mjs';
 import calculateCost from './calculateCost.mjs';
+import logPositions from './logPositions.mjs';
+import logCloseData from './logCloseData.mjs';
+import logOpenData from './logOpenData.mjs';
+import logExpectedPositions from './logExpectedPositions.mjs';
 
 const { debug } = logger('WalkForward:tradeForDate');
 
@@ -59,7 +63,7 @@ export default (
 
     debug('%t >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>', date);
 
-    debug('%t: Open prices are %O', date, openPrices);
+
 
     // OPEN: Update value of existing positions
     // Update prices on existing positions before we merge previous and new positions together
@@ -72,8 +76,6 @@ export default (
         openPrices,
         pointValues,
     );
-
-    if (positionsOnOpen.length) debug('%t: Positions on open are %O', date, positionsOnOpen);
 
 
 
@@ -89,10 +91,17 @@ export default (
         pointValues,
     );
 
-    if (newPositions.length) {
-        debug('%t: New positions are %O', date, newPositions);
-        debug('%t: Relative margins are %O', date, relativeMargins);
-    }
+
+    // Instruments that are relevant on current bar; neede for logs
+    const relevantInstruments = new Set([
+        ...positionsOnOpen.map(({ instrument }) => instrument),
+        ...newPositions.map(({ instrument }) => instrument),
+    ]);
+
+    if (newPositions.length) debug('%t: New positions are %O', date, newPositions);
+    logOpenData(debug, { relevantInstruments, relativeMargins, openPrices });
+
+
 
     // Merge previous with new positions
     // @type {object[]}
@@ -100,14 +109,14 @@ export default (
         [...positionsOnOpen, ...newPositions],
         mergePositions,
     );
-    if (positions.length) debug('%t: Merged positions are %O', date, positions);
+
 
 
     // Find out how much money was used to create the new positions.
     // type {number}
     const cost = calculateCost(positions, positionsOnOpen);
     const cash = previous.cash - cost;
-    debug('%t: Previous cash was %d, cost is %d, new cash is %d', date, previous.cash, cost, cash);
+    debug('%t: Previous cash was %m, cost is %m, new cash is %m', date, previous.cash, cost, cash);
 
 
 
@@ -119,11 +128,13 @@ export default (
         closePrices,
         pointValues,
     );
-    if (positionsOnClose.length) {
-        debug('%t: Closing prices are %O, pointValues %O', date, closePrices, pointValues);
-        debug('%t: Positions on close are %O', date, positionsOnClose);
-    }
+    logCloseData(debug, { positionsOnClose, pointValues, closePrices });
 
+    logPositions(debug, {
+        opened: positionsOnOpen,
+        merged: positions,
+        closed: positionsOnClose,
+    });
 
 
     // AFTER CLOSE: Generate orders for next bar
@@ -143,13 +154,13 @@ export default (
     );
 
     // Get amount that is available for trading
-    const { maxAmount, maxAmountPerInstrument } = getAmounts(
+    const { maxAmount, maxAmountPerInstrument } = getAmounts({
         cash,
-        valueOfCurrentlyTradingPositions,
-        allPositionsValue,
+        trading: valueOfCurrentlyTradingPositions,
+        bound: allPositionsValue - valueOfCurrentlyTradingPositions,
         investedRatio,
-        maxRatioPerInstrument,
-    );
+        ratioPerInstrument: maxRatioPerInstrument,
+    });
     debug('%t: Max amount is %d, per instrument %d', date, maxAmount, maxAmountPerInstrument);
 
     // Create expected positions for next bar. Sizes are absolute (-28 means that we should be
@@ -164,15 +175,7 @@ export default (
         maxAmountPerInstrument,
         pointValues,
     );
-    if (expectedPositions.size) {
-        debug(
-            '%t: Expected positions are %O, instruction field prices %O, pointValues %O',
-            date,
-            expectedPositions,
-            instructionFieldPrices,
-            pointValues,
-        );
-    }
+    logExpectedPositions(debug, { expectedPositions, instructionFieldPrices, pointValues });
 
 
     // Map.<string, number> where key is the instrument name and value the current position size
@@ -186,7 +189,7 @@ export default (
     if (orders.size) debug('%t: Orders are %O', date, orders);
 
 
-    debug('%t <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<', date);
+    debug('%t <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n\n\n', date);
 
 
     return {
